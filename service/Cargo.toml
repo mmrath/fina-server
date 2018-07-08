@@ -1,0 +1,14 @@
+[package]
+name = "fina-service"
+version = "0.1.0"
+authors = ["Murali Mohan Rath <murali@mmrath.com>"]
+
+[dependencies]
+diesel = "^1.3"
+fina-schema = {version="^0.1", path="../schema"}
+fina-util={version = "^0.1", path = "../util"}
+fina-model={version = "^0.1", path = "../model"}
+failure="^0.1"
+log = "0.4"
+serde = "^1.0"
+chrono = { version = "0.4", features = ["serde"] }
