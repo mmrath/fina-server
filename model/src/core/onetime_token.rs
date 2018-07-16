@@ -1,6 +1,6 @@
+use super::User;
 use chrono::DateTime;
 use chrono::Utc;
-use super::User;
 use diesel::deserialize;
 use diesel::deserialize::FromSql;
 use diesel::insert_into;
@@ -10,11 +10,13 @@ use diesel::serialize;
 use diesel::serialize::IsNull;
 use diesel::serialize::Output;
 use diesel::types::ToSql;
-use failure::Error;
 use schema::core::onetime_token;
 use schema::types::SqlTokenType;
 use std::io::Write;
+use error::{DbError, DbErrorKind};
 use util::DbConnection;
+
+use failure::ResultExt;
 
 #[derive(Queryable, Identifiable, Associations, Debug, Serialize, Deserialize, Clone)]
 #[table_name = "onetime_token"]
@@ -68,42 +70,45 @@ impl OnetimeToken {
     pub fn find_by_token(
         conn: &DbConnection,
         token_key: &str,
-    ) -> Result<Option<OnetimeToken>, Error> {
+    ) -> Result<Option<OnetimeToken>, DbError> {
         use schema::core::onetime_token::dsl::*;
         debug!("Finding key {}", token_key);
-        onetime_token
+        let res = onetime_token
             .filter(token.eq(token_key))
             .first(conn)
             .optional()
-            .map_err(|_err| format_err!("Invalid token {:?}", token_key))
+            .context(DbErrorKind::Internal)?;
+
+        Ok(res)
     }
 
     pub fn find_user_and_token(
         conn: &DbConnection,
         token_key: &str,
-    ) -> Result<Option<(OnetimeToken, User)>, Error> {
+    ) -> Result<Option<(OnetimeToken, User)>, DbError> {
         use schema::core::app_user;
         use schema::core::onetime_token;
         debug!("Finding key {}", token_key);
-        onetime_token::table
+        let res = onetime_token::table
             .filter(onetime_token::token.eq(token_key))
             .inner_join(app_user::table)
             .select((onetime_token::all_columns, app_user::all_columns))
             .first::<(OnetimeToken, User)>(conn)
             .optional()
-            .map_err(|_err| format_err!("Invalid token {:?}", token_key))
+            .context(DbErrorKind::Internal)?;
+        Ok(res)
     }
 
-    pub fn insert(conn: &DbConnection, new: &NewOnetimeToken) -> Result<(), Error> {
+    pub fn insert(conn: &DbConnection, new: &NewOnetimeToken) -> Result<(), DbError> {
         debug!("Creating key {:?}", new);
         insert_into(onetime_token::table)
             .values(new)
             .execute(conn)
-            .map_err(|_err| format_err!("Failed to create key"))?;
+            .context(DbErrorKind::Internal)?;
         Ok(())
     }
 
-    pub fn delete(conn: &DbConnection, id: i64) -> Result<(), Error> {
+    pub fn delete(conn: &DbConnection, id: i64) -> Result<(), DbError> {
         use diesel::delete;
         use schema::core::onetime_token;
 
@@ -111,7 +116,7 @@ impl OnetimeToken {
         delete(onetime_token::table)
             .filter(onetime_token::id.eq(id))
             .execute(conn)
-            .map_err(|_err| format_err!("Failed to create key"))?;
+            .context(DbErrorKind::Internal)?;
         Ok(())
     }
 }

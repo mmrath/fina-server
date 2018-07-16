@@ -14,6 +14,7 @@ pub fn new_uuid() -> String {
     use uuid::Uuid;
     Uuid::new_v4().simple().to_string()
 }
+
 pub fn sha512(input: &[u8]) -> Vec<u8> {
     let digest = digest::digest(&digest::SHA512, input);
     (&digest.as_ref()).to_vec()
@@ -26,10 +27,11 @@ pub fn argon2_hash(password: &[u8], secret: &[u8]) -> Result<String, Error> {
         .with_password(password)
         .with_secret_key(secret)
         .hash()
-        .context("Unable encrypt password")?;
+        .context("Encryption failed")? ;
 
     Ok(hash)
 }
+
 
 pub fn argon2_verify(password: &[u8], secret: &[u8], hash: &str) -> Result<bool, Error> {
     use argonautica::Verifier;
@@ -40,7 +42,23 @@ pub fn argon2_verify(password: &[u8], secret: &[u8], hash: &str) -> Result<bool,
         .with_password(password)
         .with_secret_key(secret)
         .verify()
-        .context("Unable verify password")?;
+        .context("Verification failed")?;
 
     Ok(valid)
 }
+
+
+#[derive(Copy, Clone, Eq, PartialEq, Debug, Fail, Serialize)]
+pub enum CryptoError {
+    // A plain enum with no data in any of its variants
+    //
+    // For example:
+    #[fail(display = "Error encrypting")]
+    Encryption,
+    // ...
+    #[fail(display = "Error while validating")]
+    Validation,
+
+}
+
+

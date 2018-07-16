@@ -3,12 +3,13 @@ use chrono::Utc;
 use core::User;
 use diesel::insert_into;
 use diesel::prelude::*;
-use failure::Error;
+use failure::ResultExt;
 use schema::core::user_password;
 use util::DbConnection;
+use error::{DbError, DbErrorKind};
 
 #[derive(
-    Queryable, Identifiable, AsChangeset, Associations, Debug, Serialize, Deserialize, Clone,
+Queryable, Identifiable, AsChangeset, Associations, Debug, Serialize, Deserialize, Clone,
 )]
 #[table_name = "user_password"]
 #[belongs_to(User)]
@@ -30,19 +31,21 @@ pub struct NewUserPassword {
 }
 
 impl UserPassword {
-    pub fn find(conn: &DbConnection, user_id: i64) -> Result<UserPassword, Error> {
+    pub fn find(conn: &DbConnection, user_id: i64) -> Result<Option<UserPassword>, DbError> {
         debug!("Finding password by user id {}", user_id);
-        user_password::table
+        let res = user_password::table
             .find(user_id)
             .first(conn)
-            .map_err(|_err| format_err!("Failed to fetch password by id {}", user_id))
+            .optional()
+            .context(DbErrorKind::Internal)?;
+        Ok(res)
     }
 
-    pub fn insert(conn: &DbConnection, new_password: &NewUserPassword) -> Result<(), Error> {
+    pub fn insert(conn: &DbConnection, new_password: &NewUserPassword) -> Result<(), DbError> {
         insert_into(user_password::table)
             .values(new_password)
             .execute(conn)
-            .map_err(|_err| format_err!("Failed to create password"))?;
+            .context(DbErrorKind::Internal)?;
         Ok(())
     }
 }

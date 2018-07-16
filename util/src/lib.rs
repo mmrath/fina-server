@@ -4,6 +4,7 @@
 extern crate diesel;
 #[macro_use]
 extern crate failure;
+
 #[macro_use]
 extern crate lazy_static;
 extern crate argonautica;
@@ -13,22 +14,22 @@ extern crate r2d2_diesel;
 extern crate rand;
 extern crate ring;
 extern crate uuid;
+extern crate serde;
+#[macro_use]
+extern crate serde_derive;
+extern crate http;
+extern crate erased_serde;
 
-pub use self::context::Context;
-pub use self::db::*;
-pub use self::util_functions::*;
-use failure::Error;
 
-mod macros;
+
+pub mod macros;
 
 mod context;
 mod db;
 mod util_functions;
 
-pub fn default_context() -> Result<Context, Error> {
-    let pc = DB_POOL
-        .clone()
-        .get()
-        .map_err(|_| format_err!("Unable to retrieve connection from pool"))?;
-    Ok(Context::new(pc))
-}
+pub mod error;
+
+pub use self::context::Context;
+pub use self::db::*;
+pub use self::util_functions::*;

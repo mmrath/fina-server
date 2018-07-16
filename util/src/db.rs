@@ -25,6 +25,4 @@ fn establish_connection() -> DbConnection {
 }
 
 */
-lazy_static! {
-    pub static ref DB_POOL: DbConnectionPool = establish_connection_pool();
-}
+

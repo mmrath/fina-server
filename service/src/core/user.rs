@@ -1,21 +1,27 @@
 use chrono::Duration;
 use chrono::Utc;
-use failure::Error;
-use model::core::NewOnetimeToken;
+use failure::ResultExt;
 use model::core::{
-    NewUser, NewUserPassword, OnetimeToken, TokenType, User, UserPassword, UserSignup,
+    NewUser, NewUserPassword, OnetimeToken, TokenType, User, UserPassword, UserSignUp,
 };
-use util::{argon2_hash, argon2_verify, new_uuid, sha512, Context};
+use model::core::NewOnetimeToken;
+use util::{argon2_hash, argon2_verify, Context, new_uuid, sha512};
+
+
+//use util::error::{Error, ErrorKind, ResultExt, UserError};
 
 pub(crate) const SECRET_KEY: &str = "71ade6e0-51b1-4aa3-aa70-682ea7566d3f";
 pub(crate) const PASSWORD_EXPIRY_DAYS: i64 = 365 * 25;
 pub(crate) const USER_ACTIVATION_TOKEN_EXPIRY: i64 = 24;
 
-pub fn create_user(context: &Context, new_user: &NewUser) -> Result<User, Error> {
-    User::insert(context.db(), new_user)
+pub fn create_user(context: &Context, new_user: &NewUser) -> Result<User, DataError> {
+    let user = User::insert(context.db(), new_user)
+        .context(DataErrorKind::Internal)?;
+    Ok(user)
 }
 
-pub fn sign_up(context: &Context, user_ac: &UserSignup) -> Result<User, Error> {
+
+pub fn sign_up(context: &Context, user_ac: &UserSignUp) -> Result<User, SignUpError> {
     let conn = context.db();
     debug!("User to register {:?}", user_ac);
 
@@ -27,10 +33,7 @@ pub fn sign_up(context: &Context, user_ac: &UserSignup) -> Result<User, Error> {
     };
 
     if User::exists_by_username(conn, user_ac.email.as_ref())? {
-        Err(format_err!(
-            "User with email {} already exist in system",
-            &user_ac.email
-        ))?
+        Err(SignUpErrorKind::UserEmailAlreadyExists)?;
     }
 
     let user = User::insert(conn, &new_user)?;
@@ -57,43 +60,139 @@ pub fn sign_up(context: &Context, user_ac: &UserSignup) -> Result<User, Error> {
     Ok(user)
 }
 
-pub fn activate(context: &Context, token: &str) -> Result<(), Error> {
+pub fn activate(context: &Context, token: &str) -> Result<(), ActivationError> {
     let conn = context.db();
-    let (ott, mut user) = OnetimeToken::find_user_and_token(conn, token)?
-        .ok_or_else(|| format_err!("Invalid token"))?; //User does not exists
+    let (ott, mut user) =
+        OnetimeToken::find_user_and_token(conn, token)?
+            .ok_or_else(|| ActivationErrorKind::InvalidToken)?; //User does not exists
 
     user.activated = true;
     User::activate(conn, &user)?;
-    OnetimeToken::delete(conn, ott.id)
+    OnetimeToken::delete(conn, ott.id).map_err(ActivationError::map_to(ActivationErrorKind::Internal))
 }
+
 
 fn send_activation_email(user: &User, token: &str) {
     info!("User:{:?}, activation code: {:?}", user, token);
 }
 
-pub fn login(context: &Context, username: &str, password: &str) -> Result<User, Error> {
+pub fn login(context: &Context, username: &str, password: &str) -> Result<User, LoginError> {
     let conn = context.db();
 
-    let mut user =
-        User::find_by_username(conn, username)?.ok_or_else(|| format_err!("User not found"))?;
-    let up = UserPassword::find(conn, user.id)?;
+    let mut user = User::find_by_username(conn, username)?
+        .ok_or_else(|| LoginErrorKind::InvalidUsernameOrPassword)?;
+    let up = UserPassword::find(conn, user.id)
+        .map_err(map_to(LoginErrorKind::Internal))?
+        .ok_or_else(|| LoginErrorKind::InvalidUsernameOrPassword)?;
+
     let password_sha512 = sha512(password.as_ref());
-    let valid = argon2_verify(&password_sha512, SECRET_KEY.as_ref(), &up.hash)?;
+    let valid = argon2_verify(&password_sha512, SECRET_KEY.as_ref(), &up.hash)
+        .map_err(map_to(LoginErrorKind::Internal))?;
 
     if !valid {
         user.failed_logins += 1;
         let _ = User::update(conn, &user)?;
-        bail!("Invalid username or password")
+        Err(LoginErrorKind::InvalidUsernameOrPassword)?;
     } else if !user.activated {
-        bail!("Please activate your account before logging in")
+        Err(LoginErrorKind::AccountNotYetActivated)?;
     } else if user.locked {
-        bail!("Account is currently locked. Please reset your password.")
+        Err(LoginErrorKind::AccountLocked)?;
     }
 
     Ok(user)
 }
 
-pub fn find_by_id(context: &Context, id: i64) -> Result<Option<User>, Error> {
+
+
+pub fn find_by_id(context: &Context, id: i64) -> Result<User, DataError> {
     let conn = context.db();
-    User::find(conn, id)
+    Ok(User::find(conn, id).map_err(map_to(DataErrorKind::Internal))?)
 }
+
+
+
+error_kind!(SignUpError, SignUpErrorKind, ::model::error::DbError, ::failure::Error);
+error_kind!(ActivationError, ActivationErrorKind, ::model::error::DbError);
+error_kind!(LoginError, LoginErrorKind, ::model::error::DbError);
+error_kind!(DataError, DataErrorKind, ::model::error::DbError);
+
+
+
+pub fn map_to<T,E>(error_kind: E) -> impl Fn(T) -> ::failure::Context<E>
+    where T: Into<::failure::Error>, E: ::failure::Fail + Copy
+{
+    move |err|  err.into().context(error_kind)
+}
+
+#[derive(Copy, Clone, Eq, PartialEq, Debug, Fail, Serialize)]
+pub enum DataErrorKind {
+
+    #[fail(display = "Not found")]
+    NotFound,
+
+    #[fail(display = "Internal error")]
+    Internal
+}
+
+#[derive(Copy, Clone, Eq, PartialEq, Debug, Fail, Serialize)]
+pub enum SignUpErrorKind {
+    #[fail(display = "User already exists with same email")]
+    UserEmailAlreadyExists,
+
+    #[fail(display = "Invalid username or password")]
+    InvalidUsernameOrPassword,
+
+    #[fail(display = "Account not yet activated")]
+    AccountNotYetActivated,
+
+    #[fail(display = "Invalid activation token")]
+    InvalidActivationToken,
+
+    #[fail(display = "Account is currently locked")]
+    AccountLocked,
+
+    #[fail(display = "Internal error")]
+    Internal,
+
+    #[fail(display = "Unknown error")]
+    #[doc(hidden)]
+    __NonExhaustive,
+}
+
+#[derive(Copy, Clone, Eq, PartialEq, Debug, Fail, Serialize)]
+pub enum ActivationErrorKind {
+    #[fail(display = "Invalid activation token")]
+    InvalidToken,
+
+    #[fail(display = "Account is currently locked")]
+    AccountLocked,
+
+    #[fail(display = "Internal error")]
+    Internal,
+
+    #[fail(display = "Unknown error")]
+    #[doc(hidden)]
+    __NonExhaustive,
+}
+
+#[derive(Copy, Clone, Eq, PartialEq, Debug, Fail, Serialize)]
+pub enum LoginErrorKind {
+    #[fail(display = "Invalid activation token")]
+    InvalidUsernameOrPassword,
+
+    #[fail(display = "Account is currently locked")]
+    AccountLocked,
+
+    #[fail(display = "Account is not activated")]
+    AccountNotYetActivated,
+
+    #[fail(display = "Internal error")]
+    Internal,
+
+    #[fail(display = "Unknown error")]
+    #[doc(hidden)]
+    __NonExhaustive,
+}
+
+
+
