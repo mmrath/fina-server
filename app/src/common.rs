@@ -1,8 +1,4 @@
-use actix::prelude::*;
 use util::{establish_connection_pool,DbConnectionPool};
-
-
-use super::core::config;
 use actix::prelude::*;
 use actix_web::{middleware, server, App};
 
@@ -18,7 +14,7 @@ impl Actor for ServiceActor {
 
 /// State with DbExecutor address
 pub struct AppState {
-    pub service_actor: Addr<Syn, ServiceActor>,
+    pub service_actor: Addr<ServiceActor>,
 }
 
 
@@ -29,7 +25,7 @@ pub fn run() {
     let sys = actix::System::new("diesel-example");
 
     // Start http server
-    let server = server::new(move || create_app())
+    let _server = server::new(move || create_app())
         .bind("127.0.0.1:8080")
         .unwrap()
         .start();
@@ -56,3 +52,5 @@ pub fn config_app(app: App<AppState>) -> App<AppState> {
 
     super::core::config(app)
 }
+
+

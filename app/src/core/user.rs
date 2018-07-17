@@ -1,13 +1,14 @@
 use actix::prelude::*;
-use common::ServiceActor;
-use model::core::{User, UserSignUp};
-use service::core::user::{find_by_id, sign_up, SignUpError, SignUpErrorKind, DataError, DataErrorKind};
-use util;
-use failure::{ResultExt, Fail};
 use actix_web::{App, AsyncResponder, FutureResponse, HttpResponse, Json, Path, State};
 use common::AppState;
+use common::ServiceActor;
+use failure::{Fail, ResultExt};
 use futures::Future;
 use http::StatusCode;
+use model::{core::{User, UserSignUp}, error::{DataError, DataErrorKind}};
+use service::core::user::{find_by_id, sign_up, SignUpError, SignUpErrorKind};
+use util;
+
 
 pub(crate) fn config(app: App<AppState>) -> App<AppState> {
     app.resource("/user/signup", |r| r.post().with(register_user))
@@ -44,31 +45,20 @@ pub(crate) fn register_user(
         .and_then(|res| match res {
             Ok(user) => Ok(HttpResponse::Ok().json(user)),
             Err(err) => {
-                let resp =
-                    HttpResponse::with_body(StatusCode::BAD_REQUEST, format!("{:?}", err.cause()));
-                debug!("Error signing up user {:?}", err);
+                let resp = match err.kind() {
+                    SignUpErrorKind::UserEmailAlreadyExists =>
+                        HttpResponse::build(StatusCode::BAD_REQUEST).json(err),
+                    _ => {
+                        error!("Internal error while signing up user {:?}", err);
+                        HttpResponse::build(StatusCode::INTERNAL_SERVER_ERROR).json(err)
+                    },
+
+                };
                 Ok(resp)
             }
         })
         .responder()
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 pub struct RegisterUserMsg(pub UserSignUp);

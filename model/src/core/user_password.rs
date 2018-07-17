@@ -6,7 +6,7 @@ use diesel::prelude::*;
 use failure::ResultExt;
 use schema::core::user_password;
 use util::DbConnection;
-use error::{DbError, DbErrorKind};
+use error::{DataError, DataErrorKind};
 
 #[derive(
 Queryable, Identifiable, AsChangeset, Associations, Debug, Serialize, Deserialize, Clone,
@@ -31,21 +31,21 @@ pub struct NewUserPassword {
 }
 
 impl UserPassword {
-    pub fn find(conn: &DbConnection, user_id: i64) -> Result<Option<UserPassword>, DbError> {
+    pub fn find(conn: &DbConnection, user_id: i64) -> Result<Option<UserPassword>, DataError> {
         debug!("Finding password by user id {}", user_id);
         let res = user_password::table
             .find(user_id)
             .first(conn)
             .optional()
-            .context(DbErrorKind::Internal)?;
+            .context(DataErrorKind::Internal)?;
         Ok(res)
     }
 
-    pub fn insert(conn: &DbConnection, new_password: &NewUserPassword) -> Result<(), DbError> {
+    pub fn insert(conn: &DbConnection, new_password: &NewUserPassword) -> Result<(), DataError> {
         insert_into(user_password::table)
             .values(new_password)
             .execute(conn)
-            .context(DbErrorKind::Internal)?;
+            .context(DataErrorKind::Internal)?;
         Ok(())
     }
 }

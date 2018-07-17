@@ -21,6 +21,8 @@ macro_rules! error_kind {
             inner: ::failure::Context<$error_kind>,
         }
 
+
+
         impl ::failure::Fail for $error {
             fn cause(&self) -> Option<&::failure::Fail> {
                 self.inner.cause()
@@ -46,8 +48,25 @@ macro_rules! error_kind {
             pub fn map_to<T: Into<::failure::Error>>(error_kind: $error_kind) -> impl Fn(T) -> $error {
                 move |err| $error { inner: err.into().context(error_kind) }
             }
+
+            pub fn internal_err<T>(err:T) -> $error where T: Into<::failure::Error> {
+                $error { inner: err.into().context($error_kind::Internal) }
+            }
         }
 
+        impl ::serde::Serialize for $error {
+            fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+                where
+                    S: ::serde::Serializer,
+            {
+                use ::serde::ser::SerializeStruct;
+
+                let mut state = serializer.serialize_struct(stringify!($error), 2)?;
+                state.serialize_field("error", stringify!($error))?;
+                state.serialize_field("kind", &self.kind())?;
+                state.end()
+            }
+        }
 
 
         impl From<$error_kind> for $error {
@@ -61,6 +80,9 @@ macro_rules! error_kind {
                 $error { inner: inner }
             }
         }
+
+
+
 
         $(error_from_unhandled!($error,$error_kind,$from);)*
 

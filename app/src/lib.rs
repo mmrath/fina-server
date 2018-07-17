@@ -9,6 +9,7 @@ extern crate fina_model as model;
 extern crate fina_service as service;
 extern crate fina_util as util;
 extern crate http;
+extern crate serde;
 
 pub mod common;
 pub mod core;

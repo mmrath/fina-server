@@ -13,7 +13,7 @@ use diesel::types::ToSql;
 use schema::core::onetime_token;
 use schema::types::SqlTokenType;
 use std::io::Write;
-use error::{DbError, DbErrorKind};
+use error::{DataError, DataErrorKind};
 use util::DbConnection;
 
 use failure::ResultExt;
@@ -70,14 +70,14 @@ impl OnetimeToken {
     pub fn find_by_token(
         conn: &DbConnection,
         token_key: &str,
-    ) -> Result<Option<OnetimeToken>, DbError> {
+    ) -> Result<Option<OnetimeToken>, DataError> {
         use schema::core::onetime_token::dsl::*;
         debug!("Finding key {}", token_key);
         let res = onetime_token
             .filter(token.eq(token_key))
             .first(conn)
             .optional()
-            .context(DbErrorKind::Internal)?;
+            .context(DataErrorKind::Internal)?;
 
         Ok(res)
     }
@@ -85,7 +85,7 @@ impl OnetimeToken {
     pub fn find_user_and_token(
         conn: &DbConnection,
         token_key: &str,
-    ) -> Result<Option<(OnetimeToken, User)>, DbError> {
+    ) -> Result<Option<(OnetimeToken, User)>, DataError> {
         use schema::core::app_user;
         use schema::core::onetime_token;
         debug!("Finding key {}", token_key);
@@ -95,20 +95,20 @@ impl OnetimeToken {
             .select((onetime_token::all_columns, app_user::all_columns))
             .first::<(OnetimeToken, User)>(conn)
             .optional()
-            .context(DbErrorKind::Internal)?;
+            .context(DataErrorKind::Internal)?;
         Ok(res)
     }
 
-    pub fn insert(conn: &DbConnection, new: &NewOnetimeToken) -> Result<(), DbError> {
+    pub fn insert(conn: &DbConnection, new: &NewOnetimeToken) -> Result<(), DataError> {
         debug!("Creating key {:?}", new);
         insert_into(onetime_token::table)
             .values(new)
             .execute(conn)
-            .context(DbErrorKind::Internal)?;
+            .context(DataErrorKind::Internal)?;
         Ok(())
     }
 
-    pub fn delete(conn: &DbConnection, id: i64) -> Result<(), DbError> {
+    pub fn delete(conn: &DbConnection, id: i64) -> Result<(), DataError> {
         use diesel::delete;
         use schema::core::onetime_token;
 
@@ -116,7 +116,7 @@ impl OnetimeToken {
         delete(onetime_token::table)
             .filter(onetime_token::id.eq(id))
             .execute(conn)
-            .context(DbErrorKind::Internal)?;
+            .context(DataErrorKind::Internal)?;
         Ok(())
     }
 }

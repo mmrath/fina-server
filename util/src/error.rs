@@ -68,7 +68,7 @@ impl<T: Fail + Serialize> From<Context<T>> for Error<T> {
 
 
 #[derive(Copy, Clone, Eq, PartialEq, Debug, Fail, Serialize)]
-pub enum DbError {
+pub enum DataError {
     #[fail(display = "DB error")]
     Unknown,
 

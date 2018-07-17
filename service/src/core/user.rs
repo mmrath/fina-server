@@ -5,6 +5,7 @@ use model::core::{
     NewUser, NewUserPassword, OnetimeToken, TokenType, User, UserPassword, UserSignUp,
 };
 use model::core::NewOnetimeToken;
+use model::error::{DataError, DataErrorKind};
 use util::{argon2_hash, argon2_verify, Context, new_uuid, sha512};
 
 
@@ -15,9 +16,7 @@ pub(crate) const PASSWORD_EXPIRY_DAYS: i64 = 365 * 25;
 pub(crate) const USER_ACTIVATION_TOKEN_EXPIRY: i64 = 24;
 
 pub fn create_user(context: &Context, new_user: &NewUser) -> Result<User, DataError> {
-    let user = User::insert(context.db(), new_user)
-        .context(DataErrorKind::Internal)?;
-    Ok(user)
+    User::insert(context.db(), new_user)
 }
 
 
@@ -68,7 +67,7 @@ pub fn activate(context: &Context, token: &str) -> Result<(), ActivationError> {
 
     user.activated = true;
     User::activate(conn, &user)?;
-    OnetimeToken::delete(conn, ott.id).map_err(ActivationError::map_to(ActivationErrorKind::Internal))
+    OnetimeToken::delete(conn, ott.id).map_err(ActivationError::internal_err)
 }
 
 
@@ -82,12 +81,12 @@ pub fn login(context: &Context, username: &str, password: &str) -> Result<User, 
     let mut user = User::find_by_username(conn, username)?
         .ok_or_else(|| LoginErrorKind::InvalidUsernameOrPassword)?;
     let up = UserPassword::find(conn, user.id)
-        .map_err(map_to(LoginErrorKind::Internal))?
+        .map_err(LoginError::internal_err)?
         .ok_or_else(|| LoginErrorKind::InvalidUsernameOrPassword)?;
 
     let password_sha512 = sha512(password.as_ref());
     let valid = argon2_verify(&password_sha512, SECRET_KEY.as_ref(), &up.hash)
-        .map_err(map_to(LoginErrorKind::Internal))?;
+        .context(LoginErrorKind::Internal)?;
 
     if !valid {
         user.failed_logins += 1;
@@ -103,53 +102,30 @@ pub fn login(context: &Context, username: &str, password: &str) -> Result<User, 
 }
 
 
-
 pub fn find_by_id(context: &Context, id: i64) -> Result<User, DataError> {
     let conn = context.db();
-    Ok(User::find(conn, id).map_err(map_to(DataErrorKind::Internal))?)
+    User::find(conn, id)
 }
 
 
 
-error_kind!(SignUpError, SignUpErrorKind, ::model::error::DbError, ::failure::Error);
-error_kind!(ActivationError, ActivationErrorKind, ::model::error::DbError);
-error_kind!(LoginError, LoginErrorKind, ::model::error::DbError);
-error_kind!(DataError, DataErrorKind, ::model::error::DbError);
+error_kind!(SignUpError, SignUpErrorKind, ::model::error::DataError, ::failure::Error);
+error_kind!(ActivationError, ActivationErrorKind, ::model::error::DataError);
+error_kind!(LoginError, LoginErrorKind, ::model::error::DataError);
 
 
-
-pub fn map_to<T,E>(error_kind: E) -> impl Fn(T) -> ::failure::Context<E>
+pub fn map_to<T, E>(error_kind: E) -> impl Fn(T) -> ::failure::Context<E>
     where T: Into<::failure::Error>, E: ::failure::Fail + Copy
 {
-    move |err|  err.into().context(error_kind)
+    move |err| err.into().context(error_kind)
 }
 
-#[derive(Copy, Clone, Eq, PartialEq, Debug, Fail, Serialize)]
-pub enum DataErrorKind {
 
-    #[fail(display = "Not found")]
-    NotFound,
-
-    #[fail(display = "Internal error")]
-    Internal
-}
 
 #[derive(Copy, Clone, Eq, PartialEq, Debug, Fail, Serialize)]
 pub enum SignUpErrorKind {
     #[fail(display = "User already exists with same email")]
     UserEmailAlreadyExists,
-
-    #[fail(display = "Invalid username or password")]
-    InvalidUsernameOrPassword,
-
-    #[fail(display = "Account not yet activated")]
-    AccountNotYetActivated,
-
-    #[fail(display = "Invalid activation token")]
-    InvalidActivationToken,
-
-    #[fail(display = "Account is currently locked")]
-    AccountLocked,
 
     #[fail(display = "Internal error")]
     Internal,
@@ -158,6 +134,8 @@ pub enum SignUpErrorKind {
     #[doc(hidden)]
     __NonExhaustive,
 }
+
+
 
 #[derive(Copy, Clone, Eq, PartialEq, Debug, Fail, Serialize)]
 pub enum ActivationErrorKind {
