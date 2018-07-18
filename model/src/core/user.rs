@@ -1,14 +1,14 @@
 use chrono::DateTime;
 use chrono::Utc;
-use diesel::{insert_into, update};
 use diesel::prelude::*;
+use diesel::{insert_into, update};
+use error::{DataError, DataErrorKind};
 use failure::ResultExt;
 use schema::core::app_user;
-use util::DbConnection;
-use error::{DataError, DataErrorKind};
+use util::{error::Error, DbConnection};
 
 #[derive(
-Queryable, Identifiable, AsChangeset, Associations, Debug, Serialize, Deserialize, Clone,
+    Queryable, Identifiable, AsChangeset, Associations, Debug, Serialize, Deserialize, Clone,
 )]
 #[table_name = "app_user"]
 pub struct User {
@@ -101,7 +101,10 @@ impl User {
         Ok(res)
     }
 
-    pub fn find_by_username(conn: &DbConnection, username: &str) -> Result<Option<User>, DataError> {
+    pub fn find_by_username(
+        conn: &DbConnection,
+        username: &str,
+    ) -> Result<Option<User>, DataError> {
         use schema::core::app_user;
 
         let res = app_user::table

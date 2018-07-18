@@ -5,10 +5,12 @@ use common::ServiceActor;
 use failure::{Fail, ResultExt};
 use futures::Future;
 use http::StatusCode;
-use model::{core::{User, UserSignUp}, error::{DataError, DataErrorKind}};
+use model::{
+    core::{User, UserSignUp},
+    error::{DataError, DataErrorKind},
+};
 use service::core::user::{find_by_id, sign_up, SignUpError, SignUpErrorKind};
-use util;
-
+use util::{self, error::Error};
 
 pub(crate) fn config(app: App<AppState>) -> App<AppState> {
     app.resource("/user/signup", |r| r.post().with(register_user))
@@ -46,20 +48,19 @@ pub(crate) fn register_user(
             Ok(user) => Ok(HttpResponse::Ok().json(user)),
             Err(err) => {
                 let resp = match err.kind() {
-                    SignUpErrorKind::UserEmailAlreadyExists =>
-                        HttpResponse::build(StatusCode::BAD_REQUEST).json(err),
+                    SignUpErrorKind::UserEmailAlreadyExists => {
+                        HttpResponse::build(StatusCode::BAD_REQUEST).json(err)
+                    }
                     _ => {
                         error!("Internal error while signing up user {:?}", err);
                         HttpResponse::build(StatusCode::INTERNAL_SERVER_ERROR).json(err)
-                    },
-
+                    }
                 };
                 Ok(resp)
             }
         })
         .responder()
 }
-
 
 pub struct RegisterUserMsg(pub UserSignUp);
 
@@ -91,5 +92,3 @@ impl Handler<FindUserMsg> for ServiceActor {
         find_by_id(&util::Context::new(conn), msg.0)
     }
 }
-
-

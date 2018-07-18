@@ -1,7 +1,6 @@
-use util::{establish_connection_pool,DbConnectionPool};
 use actix::prelude::*;
 use actix_web::{middleware, server, App};
-
+use util::{establish_connection_pool, DbConnectionPool};
 
 pub struct ServiceActor {
     pub pool: DbConnectionPool,
@@ -11,15 +10,10 @@ impl Actor for ServiceActor {
     type Context = SyncContext<Self>;
 }
 
-
 /// State with DbExecutor address
 pub struct AppState {
     pub service_actor: Addr<ServiceActor>,
 }
-
-
-
-
 
 pub fn run() {
     let sys = actix::System::new("diesel-example");
@@ -52,5 +46,3 @@ pub fn config_app(app: App<AppState>) -> App<AppState> {
 
     super::core::config(app)
 }
-
-

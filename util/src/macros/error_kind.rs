@@ -2,14 +2,16 @@
 
 #[macro_export]
 macro_rules! error_from_unhandled {
-    ( $error: ident, $error_kind: ident, $from: path ) => {
-        impl From<$from> for $error{
+    ($error:ident, $error_kind:ident, $from:path) => {
+        impl From<$from> for $error {
             fn from(err: $from) -> $error {
                 use failure::Fail;
-                $error { inner: err.context($error_kind::Internal) }
+                $error {
+                    inner: err.context($error_kind::Internal),
+                }
             }
         }
-    }
+    };
 }
 
 #[macro_export]
@@ -41,18 +43,17 @@ macro_rules! error_kind {
 
 
         impl $error {
-            pub fn kind(&self) -> $error_kind {
-                *self.inner.get_context()
-            }
+
 
             pub fn map_to<T: Into<::failure::Error>>(error_kind: $error_kind) -> impl Fn(T) -> $error {
                 move |err| $error { inner: err.into().context(error_kind) }
             }
 
-            pub fn internal_err<T>(err:T) -> $error where T: Into<::failure::Error> {
-                $error { inner: err.into().context($error_kind::Internal) }
-            }
+
+
         }
+
+
 
         impl ::serde::Serialize for $error {
             fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
@@ -82,10 +83,25 @@ macro_rules! error_kind {
         }
 
 
+        impl ::util::error::Error for $error {
+
+            type Kind = $error_kind;
+
+            fn is_internal_err(&self) -> bool {
+                self.kind() == $error_kind::Internal
+            }
+
+            fn to_internal_err<T>(err:T) -> Self where T: Into<::failure::Error> {
+                Self { inner: err.into().context($error_kind::Internal) }
+            }
+
+            fn kind(&self) -> $error_kind {
+                *self.inner.get_context()
+            }
+        }
 
 
         $(error_from_unhandled!($error,$error_kind,$from);)*
 
     }
 }
-

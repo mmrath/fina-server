@@ -5,7 +5,6 @@ extern crate failure;
 extern crate fina_app_lib;
 extern crate log;
 
-
 fn main() {
     ::std::env::set_var("RUST_LOG", "info,cargo=WARN,fina=DEBUG");
     ::std::env::set_var("RUST_BACKTRACE", "1");

@@ -10,11 +10,11 @@ use diesel::serialize;
 use diesel::serialize::IsNull;
 use diesel::serialize::Output;
 use diesel::types::ToSql;
+use error::{DataError, DataErrorKind};
 use schema::core::onetime_token;
 use schema::types::SqlTokenType;
 use std::io::Write;
-use error::{DataError, DataErrorKind};
-use util::DbConnection;
+use util::{error::Error, DbConnection};
 
 use failure::ResultExt;
 

@@ -621,14 +621,15 @@ CREATE TABLE user_password(
 );
 SELECT automanage_updated_at('user_password');
 
+CREATE TYPE ONETIME_TOKEN_TYPE AS ENUM ('UserActivation', 'PasswordReset');
 
-CREATE TABLE user_key(
-  id           BIGSERIAL PRIMARY KEY,
-  user_id BIGINT NOT NULL,
-  created_at   TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  expiry_date TIMESTAMP WITH TIME ZONE NOT NULL,
-  key_type         VARCHAR(64) NOT NULL,
-  key_data         VARCHAR(1024) NOT NULL,
-  CONSTRAINT fk_user_key_user FOREIGN KEY (user_id) REFERENCES app_user(id),
-  CONSTRAINT user_key_key_data UNIQUE (key_data)
+CREATE TABLE onetime_token(
+  id            BIGSERIAL PRIMARY KEY,
+  user_id       BIGINT NOT NULL,
+  created_at    TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  expiry_date   TIMESTAMP WITH TIME ZONE NOT NULL,
+  token_type    ONETIME_TOKEN_TYPE NOT NULL,
+  token         VARCHAR(1024) NOT NULL,
+  CONSTRAINT fk_user_token_user FOREIGN KEY (user_id) REFERENCES app_user(id),
+  CONSTRAINT uk_token UNIQUE (token)
 );

@@ -3,13 +3,13 @@ use chrono::Utc;
 use core::User;
 use diesel::insert_into;
 use diesel::prelude::*;
+use error::{DataError, DataErrorKind};
 use failure::ResultExt;
 use schema::core::user_password;
-use util::DbConnection;
-use error::{DataError, DataErrorKind};
+use util::{error::Error, DbConnection};
 
 #[derive(
-Queryable, Identifiable, AsChangeset, Associations, Debug, Serialize, Deserialize, Clone,
+    Queryable, Identifiable, AsChangeset, Associations, Debug, Serialize, Deserialize, Clone,
 )]
 #[table_name = "user_password"]
 #[belongs_to(User)]

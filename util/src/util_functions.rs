@@ -27,11 +27,10 @@ pub fn argon2_hash(password: &[u8], secret: &[u8]) -> Result<String, Error> {
         .with_password(password)
         .with_secret_key(secret)
         .hash()
-        .context("Encryption failed")? ;
+        .context("Encryption failed")?;
 
     Ok(hash)
 }
-
 
 pub fn argon2_verify(password: &[u8], secret: &[u8], hash: &str) -> Result<bool, Error> {
     use argonautica::Verifier;
@@ -47,7 +46,6 @@ pub fn argon2_verify(password: &[u8], secret: &[u8], hash: &str) -> Result<bool,
     Ok(valid)
 }
 
-
 #[derive(Copy, Clone, Eq, PartialEq, Debug, Fail, Serialize)]
 pub enum CryptoError {
     // A plain enum with no data in any of its variants
@@ -58,7 +56,4 @@ pub enum CryptoError {
     // ...
     #[fail(display = "Error while validating")]
     Validation,
-
 }
-
-

@@ -1,9 +1,9 @@
 use diesel::prelude::*;
 
+use error::{DataError, DataErrorKind};
 use failure::ResultExt;
 use schema::core::*;
-use util::DbConnection;
-use error::{DataError, DataErrorKind};
+use util::{error::Error, DbConnection};
 
 #[derive(Queryable, Identifiable, AsChangeset, Debug, Serialize, Deserialize, Clone)]
 #[table_name = "date_format"]
@@ -17,7 +17,8 @@ pub struct DateFormat {
 impl DateFormat {
     pub fn find_all(conn: &DbConnection) -> Result<Vec<DateFormat>, DataError> {
         debug!("Fetching date formats");
-        let res = date_format::table.load(conn)
+        let res = date_format::table
+            .load(conn)
             .context(DataErrorKind::Internal)?;
         Ok(res)
     }
@@ -66,4 +67,3 @@ pub struct Currency {
     pub symbol: String,
     pub name: String,
 }
-

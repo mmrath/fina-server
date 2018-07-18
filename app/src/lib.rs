@@ -13,4 +13,3 @@ extern crate serde;
 
 pub mod common;
 pub mod core;
-

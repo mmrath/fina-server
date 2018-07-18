@@ -1,6 +1,3 @@
-
-
-
 extern crate chrono;
 
 #[macro_use]
@@ -21,6 +18,3 @@ extern crate fina_util as util;
 
 pub mod core;
 pub mod error;
-
-
-

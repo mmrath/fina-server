@@ -13,14 +13,12 @@ extern crate r2d2;
 extern crate r2d2_diesel;
 extern crate rand;
 extern crate ring;
-extern crate uuid;
 extern crate serde;
+extern crate uuid;
 #[macro_use]
 extern crate serde_derive;
-extern crate http;
 extern crate erased_serde;
-
-
+extern crate http;
 
 pub mod macros;
 
