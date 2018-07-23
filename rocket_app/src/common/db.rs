@@ -1,13 +1,14 @@
-use crate::util::{DbConnectionPool, PooledDbConnection};
+use crate::util::db::{ConnectionPool, PooledConnection};
+use util::Context;
 use rocket::http::Status;
 use rocket::request::{self, FromRequest};
 use rocket::{Outcome, Request, State};
 use std::ops::Deref;
 
-pub struct Conn(pub PooledDbConnection);
+pub struct RequestContext(pub Context);
 
-impl Deref for Conn {
-    type Target = PooledDbConnection;
+impl Deref for RequestContext {
+    type Target = Context;
 
     #[inline(always)]
     fn deref(&self) -> &Self::Target {
@@ -15,14 +16,15 @@ impl Deref for Conn {
     }
 }
 
-impl<'a, 'r> FromRequest<'a, 'r> for Conn {
+impl<'a, 'r> FromRequest<'a, 'r> for RequestContext {
     type Error = ();
 
-    fn from_request(request: &'a Request<'r>) -> request::Outcome<Conn, ()> {
-        let pool = request.guard::<State<DbConnectionPool>>()?;
-        match pool.get() {
-            Ok(conn) => Outcome::Success(Conn(conn)),
-            Err(_) => Outcome::Failure((Status::ServiceUnavailable, ())),
-        }
+    fn from_request(request: &'a Request<'r>) -> request::Outcome<RequestContext, ()> {
+        let pool = request.guard::<State<ConnectionPool>>()?;
+        pool.get()
+            .map(|conn|Outcome::Success(RequestContext(Context::new(conn))))
+            .unwrap_or_else(|e|Outcome::Failure((Status::ServiceUnavailable, ())))
+
     }
 }
+

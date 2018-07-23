@@ -5,7 +5,7 @@ use diesel::{insert_into, update};
 use error::{DataError, DataErrorKind};
 use failure::ResultExt;
 use schema::core::app_user;
-use util::{error::Error, DbConnection};
+use util::db::Connection;
 
 #[derive(
     Queryable, Identifiable, AsChangeset, Associations, Debug, Serialize, Deserialize, Clone,
@@ -50,7 +50,7 @@ pub enum UserUniqueKey<'a> {
 }
 
 impl User {
-    pub fn insert(conn: &DbConnection, new_user: &NewUser) -> Result<User, DataError> {
+    pub fn insert(conn: &Connection, new_user: &NewUser) -> Result<User, DataError> {
         let res = insert_into(app_user::table)
             .values(new_user)
             .get_result(conn)
@@ -59,7 +59,7 @@ impl User {
         Ok(res)
     }
 
-    pub fn activate(conn: &DbConnection, user: &User) -> Result<(), DataError> {
+    pub fn activate(conn: &Connection, user: &User) -> Result<(), DataError> {
         use schema::core::app_user::dsl::*;
 
         let uc = update(app_user)
@@ -73,7 +73,7 @@ impl User {
             Ok(())
         }
     }
-    pub fn update(conn: &DbConnection, user: &User) -> Result<User, DataError> {
+    pub fn update(conn: &Connection, user: &User) -> Result<User, DataError> {
         let res = update(app_user::table)
             .set(user)
             .get_result(conn)
@@ -81,7 +81,7 @@ impl User {
         Ok(res)
     }
 
-    pub fn find(conn: &DbConnection, id: i64) -> Result<User, DataError> {
+    pub fn find(conn: &Connection, id: i64) -> Result<User, DataError> {
         debug!("Finding user by id {}", id);
         let res = app_user::table
             .find(id)
@@ -90,7 +90,7 @@ impl User {
         Ok(res)
     }
 
-    pub fn exists_by_username(conn: &DbConnection, uname: &str) -> Result<bool, DataError> {
+    pub fn exists_by_username(conn: &Connection, uname: &str) -> Result<bool, DataError> {
         use diesel::expression::dsl::exists;
         use diesel::select;
         use schema::core::app_user::dsl::*;
@@ -102,7 +102,7 @@ impl User {
     }
 
     pub fn find_by_username(
-        conn: &DbConnection,
+        conn: &Connection,
         username: &str,
     ) -> Result<Option<User>, DataError> {
         use schema::core::app_user;

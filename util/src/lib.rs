@@ -23,11 +23,10 @@ extern crate http;
 pub mod macros;
 
 mod context;
-mod db;
+pub mod db;
 mod util_functions;
 
 pub mod error;
 
 pub use self::context::Context;
-pub use self::db::*;
 pub use self::util_functions::*;

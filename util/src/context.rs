@@ -1,15 +1,15 @@
-use super::db::{DbConnection, PooledDbConnection};
+use super::db::{Connection, PooledConnection};
 
 pub struct Context {
-    pool: PooledDbConnection,
+    pool: PooledConnection,
 }
 
 impl Context {
-    pub fn new(pc: PooledDbConnection) -> Self {
+    pub fn new(pc: PooledConnection) -> Self {
         Self { pool: pc }
     }
 
-    pub fn db(&self) -> &DbConnection {
+    pub fn db(&self) -> &Connection {
         &*self.pool
     }
 }

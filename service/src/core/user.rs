@@ -1,16 +1,13 @@
 use chrono::Duration;
 use chrono::Utc;
-use diesel::Connection;
 use failure::{Fail, ResultExt};
 use model::core::NewOnetimeToken;
 use model::core::{
     NewUser, NewUserPassword, OnetimeToken, TokenType, User, UserPassword, UserSignUp,
 };
 use model::error::{DataError, DataErrorKind};
-use util::DbConnection;
+use util::db::{Connection, tx};
 use util::{argon2_hash, argon2_verify, error::Error, new_uuid, sha512, Context};
-
-//use util::error::{Error, ErrorKind, ResultExt, UserError};
 
 pub(crate) const SECRET_KEY: &str = "71ade6e0-51b1-4aa3-aa70-682ea7566d3f";
 pub(crate) const PASSWORD_EXPIRY_DAYS: i64 = 365 * 25;
@@ -21,28 +18,6 @@ pub fn create_user(context: &Context, new_user: &NewUser) -> Result<User, DataEr
     tx(conn, |conn| User::insert(conn, new_user))
 }
 
-pub fn tx<T: Sized, E: Fail + Error, F: FnOnce(&DbConnection) -> Result<T, E>>(
-    conn: &DbConnection,
-    f: F,
-) -> Result<T, E> {
-    use diesel::connection::TransactionManager;
-    use diesel::Connection;
-
-    let tm = conn.transaction_manager();
-    let _ = tm.begin_transaction(conn).map_err(E::to_internal_err)?;
-    let res = f(conn);
-
-    match res {
-        Err(ref e) => if e.is_internal_err() {
-            tm.rollback_transaction(conn).map_err(E::to_internal_err)?;
-        } else {
-            tm.commit_transaction(conn).map_err(E::to_internal_err)?;
-        },
-        Ok(_) => tm.commit_transaction(conn).map_err(E::to_internal_err)?,
-    }
-
-    return res;
-}
 
 pub fn sign_up(context: &Context, user_ac: &UserSignUp) -> Result<User, SignUpError> {
     let conn = context.db();

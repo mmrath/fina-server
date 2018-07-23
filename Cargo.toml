@@ -4,7 +4,7 @@ members = [
     "schema",
     "model",
     "service",
-    "app"
+    "rocket_app"
 ]
 
 [dependencies]

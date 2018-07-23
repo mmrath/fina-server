@@ -14,7 +14,7 @@ fn test_user_register() {
         "DATABASE_URL",
         "postgres://billac:billac@localhost/billacdb",
     );
-    let (rocket, db) = fina_app_lib::rocket();
+    let (rocket, context) = fina_app_lib::rocket();
     let client = Client::new(rocket).expect("Rocket client");
 
     // Check that a message with ID 1 doesn't exist.

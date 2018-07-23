@@ -14,7 +14,7 @@ use error::{DataError, DataErrorKind};
 use schema::core::onetime_token;
 use schema::types::SqlTokenType;
 use std::io::Write;
-use util::{error::Error, DbConnection};
+use util::db::Connection;
 
 use failure::ResultExt;
 
@@ -68,7 +68,7 @@ impl FromSql<SqlTokenType, Pg> for TokenType {
 
 impl OnetimeToken {
     pub fn find_by_token(
-        conn: &DbConnection,
+        conn: &Connection,
         token_key: &str,
     ) -> Result<Option<OnetimeToken>, DataError> {
         use schema::core::onetime_token::dsl::*;
@@ -83,7 +83,7 @@ impl OnetimeToken {
     }
 
     pub fn find_user_and_token(
-        conn: &DbConnection,
+        conn: &Connection,
         token_key: &str,
     ) -> Result<Option<(OnetimeToken, User)>, DataError> {
         use schema::core::app_user;
@@ -99,7 +99,7 @@ impl OnetimeToken {
         Ok(res)
     }
 
-    pub fn insert(conn: &DbConnection, new: &NewOnetimeToken) -> Result<(), DataError> {
+    pub fn insert(conn: &Connection, new: &NewOnetimeToken) -> Result<(), DataError> {
         debug!("Creating key {:?}", new);
         insert_into(onetime_token::table)
             .values(new)
@@ -108,7 +108,7 @@ impl OnetimeToken {
         Ok(())
     }
 
-    pub fn delete(conn: &DbConnection, id: i64) -> Result<(), DataError> {
+    pub fn delete(conn: &Connection, id: i64) -> Result<(), DataError> {
         use diesel::delete;
         use schema::core::onetime_token;
 

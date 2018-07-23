@@ -27,11 +27,13 @@ fn hello(name: String, age: u8) -> String {
     format!("Hello, {} year old named {}!", age, name)
 }
 
-pub fn rocket() -> (Rocket, Option<common::db::Conn>) {
-    let pool = util::establish_connection_pool();
+pub fn rocket() -> (Rocket, Option<common::db::RequestContext>) {
+    let pool = util::db::establish_connection_pool();
     let conn = if cfg!(test) {
-        Some(common::db::Conn(
-            pool.get().expect("database connection for testing"),
+        Some(common::db::RequestContext(
+            util::Context::new(
+            pool.get().expect("database connection for testing")
+            )
         ))
     } else {
         None
