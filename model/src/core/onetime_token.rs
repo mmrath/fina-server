@@ -76,8 +76,7 @@ impl OnetimeToken {
         let res = onetime_token
             .filter(token.eq(token_key))
             .first(conn)
-            .optional()
-            .context(DataErrorKind::Internal)?;
+            .optional()?;
 
         Ok(res)
     }
@@ -94,8 +93,7 @@ impl OnetimeToken {
             .inner_join(app_user::table)
             .select((onetime_token::all_columns, app_user::all_columns))
             .first::<(OnetimeToken, User)>(conn)
-            .optional()
-            .context(DataErrorKind::Internal)?;
+            .optional()?;
         Ok(res)
     }
 
@@ -103,8 +101,7 @@ impl OnetimeToken {
         debug!("Creating key {:?}", new);
         insert_into(onetime_token::table)
             .values(new)
-            .execute(conn)
-            .context(DataErrorKind::Internal)?;
+            .execute(conn)?;
         Ok(())
     }
 
@@ -115,8 +112,7 @@ impl OnetimeToken {
         debug!("Deleting token with id {:?}", id);
         delete(onetime_token::table)
             .filter(onetime_token::id.eq(id))
-            .execute(conn)
-            .context(DataErrorKind::Internal)?;
+            .execute(conn)?;
         Ok(())
     }
 }

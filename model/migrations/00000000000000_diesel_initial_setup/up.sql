@@ -36,8 +36,8 @@ LANGUAGE plpgsql;
 
 CREATE TABLE language (
   id     SERIAL PRIMARY KEY,
-  name   VARCHAR(64) NOT NULL,
-  locale VARCHAR(16) NOT NULL,
+  name   TEXT NOT NULL,
+  locale TEXT NOT NULL,
   CONSTRAINT language_uk_name UNIQUE (name),
   CONSTRAINT language_uk_locale UNIQUE (locale)
 );
@@ -74,9 +74,9 @@ INSERT INTO language (id, name, locale) VALUES
 
 CREATE TABLE date_format (
   id                 SERIAL PRIMARY KEY,
-  c_format           VARCHAR(64) NOT NULL,
-  date_picker_format VARCHAR(64) NOT NULL,
-  js_format          VARCHAR(64) NOT NULL,
+  c_format           TEXT NOT NULL,
+  date_picker_format TEXT NOT NULL,
+  js_format          TEXT NOT NULL,
   CONSTRAINT date_format_uk_c_format UNIQUE (c_format)
 );
 
@@ -99,8 +99,8 @@ INSERT INTO date_format (id, c_format, date_picker_format, js_format) VALUES
 
 CREATE TABLE datetime_format (
   id        SERIAL PRIMARY KEY,
-  c_format  VARCHAR(64) NOT NULL,
-  js_format VARCHAR(64) NOT NULL,
+  c_format  TEXT NOT NULL,
+  js_format TEXT NOT NULL,
   CONSTRAINT datetime_format_uk_01 UNIQUE (c_format)
 );
 
@@ -121,9 +121,9 @@ INSERT INTO datetime_format (id, c_format, js_format) VALUES
 
 CREATE TABLE timezone (
   id         SERIAL PRIMARY KEY,
-  name       VARCHAR(64)  NOT NULL,
-  gmt_offset VARCHAR(6)   NOT NULL,
-  location   VARCHAR(256) NOT NULL,
+  name       TEXT  NOT NULL,
+  gmt_offset TEXT   NOT NULL,
+  location   TEXT NOT NULL,
   CONSTRAINT datetime_format_uk_code UNIQUE (name)
 );
 
@@ -245,11 +245,11 @@ INSERT INTO timezone (id, name, gmt_offset, location) VALUES
 
 CREATE TABLE currency (
   id        SERIAL PRIMARY KEY,
-  code      VARCHAR(3)   NOT NULL,
-  symbol    VARCHAR(6)   NULL,
-  name      VARCHAR(64)  NOT NULL,
+  code      TEXT   NOT NULL,
+  symbol    TEXT   NULL,
+  name      TEXT  NOT NULL,
   precision SMALLINT     NOT NULL,
-  format    varchar(255) NOT NULL,
+  format    TEXT NOT NULL,
   CONSTRAINT currency_uk_code UNIQUE (code)
 );
 
@@ -334,10 +334,10 @@ INSERT INTO currency (id, code, symbol, name, precision, format) VALUES
 
 CREATE TABLE country (
   id        SERIAL PRIMARY KEY,
-  code      VARCHAR(2)   NOT NULL,
-  name      VARCHAR(128) NOT NULL,
+  code      TEXT   NOT NULL,
+  name      TEXT NOT NULL,
   dial_code SMALLINT     NOT NULL,
-  currency  VARCHAR(3)   NOT NULL,
+  currency  TEXT   NOT NULL,
   CONSTRAINT country_uk_name UNIQUE (name),
   CONSTRAINT country_uk_code UNIQUE (code)
 );
@@ -596,11 +596,11 @@ CREATE TABLE app_user (
   created_at   TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at   TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
   version      INTEGER                  NOT NULL DEFAULT 1,
-  first_name   VARCHAR(64)              NOT NULL,
-  last_name    VARCHAR(64)              NOT NULL,
-  username     VARCHAR(128)             NOT NULL,
-  email        VARCHAR(128)             NOT NULL,
-  phone_number VARCHAR(32)              NULL,
+  first_name   TEXT              NOT NULL,
+  last_name    TEXT              NOT NULL,
+  username     TEXT             NOT NULL,
+  email        TEXT             NOT NULL,
+  phone_number TEXT              NULL,
   activated    BOOLEAN                  NOT NULL DEFAULT FALSE,
   locked       BOOLEAN                  NOT NULL DEFAULT FALSE,
   failed_logins SMALLINT NOT NULL DEFAULT 0,
@@ -615,7 +615,7 @@ CREATE TABLE user_password(
   user_id BIGINT PRIMARY KEY,
   created_at   TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at   TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  hash VARCHAR(1024) NOT NULL,
+  hash TEXT NOT NULL,
   expiry_date TIMESTAMP WITH TIME ZONE NOT NULL,
   CONSTRAINT fk_user_password_user FOREIGN KEY (user_id) REFERENCES app_user(id)
 );
@@ -628,8 +628,8 @@ CREATE TABLE onetime_token(
   user_id       BIGINT NOT NULL,
   created_at    TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
   expiry_date   TIMESTAMP WITH TIME ZONE NOT NULL,
-  token_type    ONETIME_TOKEN_TYPE NOT NULL,
-  token         VARCHAR(1024) NOT NULL,
+  token_type    TEXT NOT NULL,
+  token         TEXT NOT NULL,
   CONSTRAINT fk_user_token_user FOREIGN KEY (user_id) REFERENCES app_user(id),
   CONSTRAINT uk_token UNIQUE (token)
 );

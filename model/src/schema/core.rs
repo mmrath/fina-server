@@ -80,11 +80,10 @@ table! {
     }
 }
 
-joinable!(user_password -> app_user (user_id));
 
 table! {
     use diesel::sql_types::*;
-    use crate::types::SqlTokenType;
+    use crate::schema::types::SqlTokenType;
     onetime_token (id) {
         id -> Int8,
         user_id -> Nullable<Int8>,
@@ -107,3 +106,40 @@ allow_tables_to_appear_in_same_query!(
     user_password,
     onetime_token
 );
+
+
+
+table! {
+    message (id) {
+        id -> Int8,
+        created_at -> Timestamptz,
+        subject -> Varchar,
+        message_type -> Varchar,
+        body_type -> Varchar,
+        body -> Binary,
+    }
+}
+
+table! {
+    message_address (id) {
+        id -> Int8,
+        message_id -> Int8,
+        address_type -> Varchar,
+        name -> Nullable<Varchar>,
+        address -> Varchar,
+    }
+}
+
+table! {
+    message_attachment (id) {
+        id -> Int8,
+        message_id -> Int8,
+        name -> Varchar,
+        data -> Binary,
+    }
+}
+
+
+
+joinable!(user_password -> app_user (user_id));
+

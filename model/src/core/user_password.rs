@@ -36,16 +36,14 @@ impl UserPassword {
         let res = user_password::table
             .find(user_id)
             .first(conn)
-            .optional()
-            .context(DataErrorKind::Internal)?;
+            .optional()?;
         Ok(res)
     }
 
     pub fn insert(conn: &Connection, new_password: &NewUserPassword) -> Result<(), DataError> {
         insert_into(user_password::table)
             .values(new_password)
-            .execute(conn)
-            .context(DataErrorKind::Internal)?;
+            .execute(conn)?;
         Ok(())
     }
 }

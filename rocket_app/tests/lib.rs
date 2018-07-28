@@ -10,6 +10,12 @@ extern crate fina_app_lib;
 extern crate parking_lot;
 extern crate reqwest;
 extern crate rocket;
+extern crate fina_util as util;
+extern crate fina_model as model;
+
+extern crate diesel;
+extern crate serde;
+extern crate serde_json;
 
 mod common;
 mod core;

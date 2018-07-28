@@ -43,14 +43,9 @@ macro_rules! error_kind {
 
 
         impl $error {
-
-
             pub fn map_to<T: Into<::failure::Error>>(error_kind: $error_kind) -> impl Fn(T) -> $error {
                 move |err| $error { inner: err.into().context(error_kind) }
             }
-
-
-
         }
 
 

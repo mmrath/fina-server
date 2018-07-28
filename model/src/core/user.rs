@@ -8,7 +8,7 @@ use schema::core::app_user;
 use util::db::Connection;
 
 #[derive(
-    Queryable, Identifiable, AsChangeset, Associations, Debug, Serialize, Deserialize, Clone,
+    Queryable, Identifiable, AsChangeset, Associations, Debug, Serialize, Deserialize, Clone,Eq,PartialEq
 )]
 #[table_name = "app_user"]
 pub struct User {
@@ -43,6 +43,14 @@ pub struct UserSignUp {
     pub password: String,
 }
 
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct UserLogin {
+    pub username: String,
+    pub password: String,
+}
+
+
 pub enum UserUniqueKey<'a> {
     Username(&'a str),
     Email(&'a str),
@@ -53,8 +61,7 @@ impl User {
     pub fn insert(conn: &Connection, new_user: &NewUser) -> Result<User, DataError> {
         let res = insert_into(app_user::table)
             .values(new_user)
-            .get_result(conn)
-            .context(DataErrorKind::Internal)?;
+            .get_result(conn)?;
 
         Ok(res)
     }
@@ -65,8 +72,7 @@ impl User {
         let uc = update(app_user)
             .filter(id.eq(user.id))
             .set(activated.eq(true))
-            .execute(conn)
-            .context(DataErrorKind::Internal)?;
+            .execute(conn)?;
         if uc != 1 {
             Err(DataErrorKind::IncorrectResultSize(1, uc))?
         } else {
@@ -76,8 +82,7 @@ impl User {
     pub fn update(conn: &Connection, user: &User) -> Result<User, DataError> {
         let res = update(app_user::table)
             .set(user)
-            .get_result(conn)
-            .context(DataErrorKind::Internal)?;
+            .get_result(conn)?;
         Ok(res)
     }
 
@@ -85,8 +90,7 @@ impl User {
         debug!("Finding user by id {}", id);
         let res = app_user::table
             .find(id)
-            .first(conn)
-            .context(DataErrorKind::Internal)?;
+            .first(conn)?;
         Ok(res)
     }
 
@@ -96,8 +100,7 @@ impl User {
         use schema::core::app_user::dsl::*;
 
         let res = select(exists(app_user.filter(username.eq(uname))))
-            .get_result(conn)
-            .context(DataErrorKind::Internal)?;
+            .get_result(conn)?;
         Ok(res)
     }
 
@@ -111,8 +114,7 @@ impl User {
             .filter(app_user::username.eq(username))
             .select(app_user::all_columns)
             .first::<User>(conn)
-            .optional()
-            .context(DataErrorKind::Internal)?;
+            .optional()?;
         Ok(res)
     }
 }

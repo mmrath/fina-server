@@ -13,7 +13,6 @@ extern crate serde;
 extern crate serde_derive;
 
 extern crate fina_model as model;
-extern crate fina_schema as schema;
 #[macro_use]
 extern crate fina_util as util;
 

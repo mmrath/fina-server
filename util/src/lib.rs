@@ -1,6 +1,7 @@
 #![feature(rust_2018_preview)]
 #![deny(rust_2018_compatibility)]
 
+
 extern crate diesel;
 #[macro_use]
 extern crate failure;
