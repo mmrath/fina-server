@@ -1,27 +1,29 @@
 CREATE TABLE message (
-  id           BIGSERIAL PRIMARY KEY,
+  id           BIGSERIAL,
   created_at   TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
   subject      TEXT                     NOT NULL,
   message_type TEXT                     NOT NULL,
   body_type    TEXT                     NOT NULL,
-  body         TEXT                     NOT NULL
+  body         TEXT                     NOT NULL,
+  CONSTRAINT pk_message PRIMARY KEY (id)
 );
 
 CREATE TABLE message_address (
-  id           BIGSERIAL PRIMARY KEY,
+  id           BIGSERIAL ,
   message_id   BIGINT NOT NULL,
   address_type TEXT   NOT NULL,
   name         TEXT,
   address      TEXT,
-  CONSTRAINT fk_message_id FOREIGN KEY (message_id) REFERENCES message (id)
+  CONSTRAINT pk_message_address PRIMARY KEY (id),
+  CONSTRAINT fk_message_address__message FOREIGN KEY (message_id) REFERENCES message (id)
 );
 
 
 CREATE TABLE message_attachment (
-  id         BIGSERIAL PRIMARY KEY,
+  id         BIGSERIAL,
   message_id BIGINT NOT NULL,
   name       TEXT,
   DATA       BYTEA,
-  CONSTRAINT fk_message_id FOREIGN KEY (message_id) REFERENCES message (id)
-
+  CONSTRAINT pk_message_attachment PRIMARY KEY (id),
+  CONSTRAINT fk_message_attachment__message FOREIGN KEY (message_id) REFERENCES message (id)
 );

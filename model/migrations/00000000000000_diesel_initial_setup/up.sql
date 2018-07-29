@@ -35,11 +35,12 @@ LANGUAGE plpgsql;
 
 
 CREATE TABLE language (
-  id     SERIAL PRIMARY KEY,
+  id     SERIAL,
   name   TEXT NOT NULL,
   locale TEXT NOT NULL,
-  CONSTRAINT language_uk_name UNIQUE (name),
-  CONSTRAINT language_uk_locale UNIQUE (locale)
+  CONSTRAINT pk_language PRIMARY KEY (id),
+  CONSTRAINT uk_name UNIQUE (name),
+  CONSTRAINT uk_locale UNIQUE (locale)
 );
 
 
@@ -73,11 +74,12 @@ INSERT INTO language (id, name, locale) VALUES
 
 
 CREATE TABLE date_format (
-  id                 SERIAL PRIMARY KEY,
+  id                 SERIAL,
   c_format           TEXT NOT NULL,
   date_picker_format TEXT NOT NULL,
   js_format          TEXT NOT NULL,
-  CONSTRAINT date_format_uk_c_format UNIQUE (c_format)
+  CONSTRAINT pk_date_format PRIMARY KEY (id),
+  CONSTRAINT uk_date_format__c_format UNIQUE (c_format)
 );
 
 
@@ -98,10 +100,11 @@ INSERT INTO date_format (id, c_format, date_picker_format, js_format) VALUES
 
 
 CREATE TABLE datetime_format (
-  id        SERIAL PRIMARY KEY,
+  id        SERIAL,
   c_format  TEXT NOT NULL,
   js_format TEXT NOT NULL,
-  CONSTRAINT datetime_format_uk_01 UNIQUE (c_format)
+  CONSTRAINT pk_datetime_format PRIMARY KEY (id),
+  CONSTRAINT uk_datetime_format__c_format UNIQUE (c_format)
 );
 
 INSERT INTO datetime_format (id, c_format, js_format) VALUES
@@ -120,11 +123,12 @@ INSERT INTO datetime_format (id, c_format, js_format) VALUES
   (13, 'j. F Y g:i a', 'DD. MMMM YYYY h:mm:ss a');
 
 CREATE TABLE timezone (
-  id         SERIAL PRIMARY KEY,
+  id         SERIAL,
   name       TEXT NOT NULL,
   gmt_offset TEXT NOT NULL,
   location   TEXT NOT NULL,
-  CONSTRAINT datetime_format_uk_code UNIQUE (name)
+  CONSTRAINT pk_timezone PRIMARY KEY (id),
+  CONSTRAINT uk_timezone__code UNIQUE (name)
 );
 
 INSERT INTO timezone (id, name, gmt_offset, location) VALUES
@@ -244,13 +248,14 @@ INSERT INTO timezone (id, name, gmt_offset, location) VALUES
 
 
 CREATE TABLE currency (
-  id        SERIAL PRIMARY KEY,
+  id        SERIAL,
   code      TEXT     NOT NULL,
   symbol    TEXT     NULL,
   name      TEXT     NOT NULL,
   precision SMALLINT NOT NULL,
   format    TEXT     NOT NULL,
-  CONSTRAINT currency_uk_code UNIQUE (code)
+  CONSTRAINT pk_currency PRIMARY KEY (id),
+  CONSTRAINT uk_currency__code UNIQUE (code)
 );
 
 
@@ -333,13 +338,14 @@ INSERT INTO currency (id, code, symbol, name, precision, format) VALUES
   (76, 'AFN', '؋', 'Afgani', 2, '###,##.##');
 
 CREATE TABLE country (
-  id        SERIAL PRIMARY KEY,
+  id        SERIAL,
   code      TEXT     NOT NULL,
   name      TEXT     NOT NULL,
   dial_code SMALLINT NOT NULL,
   currency  TEXT     NOT NULL,
-  CONSTRAINT country_uk_name UNIQUE (name),
-  CONSTRAINT country_uk_code UNIQUE (code)
+  CONSTRAINT pk_country PRIMARY KEY (id),
+  CONSTRAINT uk_country__name UNIQUE (name),
+  CONSTRAINT uk_country__code UNIQUE (code)
 );
 
 INSERT INTO country (id, code, name, dial_code, currency) VALUES
@@ -592,7 +598,7 @@ INSERT INTO country (id, code, name, dial_code, currency) VALUES
 
 
 CREATE TABLE app_user (
-  id            BIGSERIAL PRIMARY KEY,
+  id            BIGSERIAL,
   created_at    TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at    TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
   version       INTEGER                  NOT NULL DEFAULT 1,
@@ -604,30 +610,33 @@ CREATE TABLE app_user (
   activated     BOOLEAN                  NOT NULL DEFAULT FALSE,
   locked        BOOLEAN                  NOT NULL DEFAULT FALSE,
   failed_logins SMALLINT                 NOT NULL DEFAULT 0,
-  CONSTRAINT uk_email UNIQUE (email),
-  CONSTRAINT uk_login UNIQUE (username),
-  CONSTRAINT uk_phone_number UNIQUE (phone_number)
+  CONSTRAINT pk_app_user PRIMARY KEY (id),
+  CONSTRAINT uk_app_user__email UNIQUE (email),
+  CONSTRAINT uk_app_user__login UNIQUE (username),
+  CONSTRAINT uk_app_user__phone_number UNIQUE (phone_number)
 );
 
 SELECT automanage_updated_at('app_user');
 
 CREATE TABLE user_password (
-  user_id     BIGINT PRIMARY KEY,
+  user_id     BIGINT,
   created_at  TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at  TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
   hash        TEXT                     NOT NULL,
   expiry_date TIMESTAMP WITH TIME ZONE NOT NULL,
-  CONSTRAINT fk_user_id FOREIGN KEY (user_id) REFERENCES app_user (id)
+  CONSTRAINT pk_user_password PRIMARY KEY (user_id),
+  CONSTRAINT fk_user_password__app_user FOREIGN KEY (user_id) REFERENCES app_user (id)
 );
 SELECT automanage_updated_at('user_password');
 
 CREATE TABLE onetime_token (
-  id          BIGSERIAL PRIMARY KEY,
+  id          BIGSERIAL,
   user_id     BIGINT                   NOT NULL,
   created_at  TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
   expiry_date TIMESTAMP WITH TIME ZONE NOT NULL,
   token_type  TEXT                     NOT NULL,
   token       TEXT                     NOT NULL,
-  CONSTRAINT fk_user_id FOREIGN KEY (user_id) REFERENCES app_user (id),
-  CONSTRAINT uk_token UNIQUE (token)
+  CONSTRAINT pk_onetime_token PRIMARY KEY (user_id),
+  CONSTRAINT fk_onetime_token__app_user FOREIGN KEY (user_id) REFERENCES app_user (id),
+  CONSTRAINT uk_onetime_token__token UNIQUE (token)
 );
