@@ -1,5 +1,5 @@
-use crate::util::db::{ConnectionPool, PooledConnection};
-use util::Context;
+use fina_util::db::ConnectionPool;
+use fina_util::Context;
 use rocket::http::Status;
 use rocket::request::{self, FromRequest};
 use rocket::{Outcome, Request, State};
@@ -22,9 +22,7 @@ impl<'a, 'r> FromRequest<'a, 'r> for RequestContext {
     fn from_request(request: &'a Request<'r>) -> request::Outcome<RequestContext, ()> {
         let pool = request.guard::<State<ConnectionPool>>()?;
         pool.get()
-            .map(|conn|Outcome::Success(RequestContext(Context::new(conn))))
-            .unwrap_or_else(|e|Outcome::Failure((Status::ServiceUnavailable, ())))
-
+            .map(|conn| Outcome::Success(RequestContext(Context::new(conn))))
+            .unwrap_or_else(|_e| Outcome::Failure((Status::ServiceUnavailable, ())))
     }
 }
-

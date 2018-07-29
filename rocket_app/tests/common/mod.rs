@@ -6,9 +6,9 @@ static DB_LOCK: Mutex<()> = Mutex::new(());
 macro_rules! run_test {
     (| $client:ident, $conn:ident | $block:expr) => {{
         ::std::env::set_var(
-        "DATABASE_URL",
-        "postgres://billac:billac@localhost/billacdb",
-    );
+            "DATABASE_URL",
+            "postgres://billac:billac@localhost/billacdb",
+        );
         let _lock = DB_LOCK.lock();
         let (rocket, db) = fina_app_lib::rocket();
         let $client = Client::new(rocket).expect("Rocket client");
@@ -17,20 +17,21 @@ macro_rules! run_test {
     }};
 }
 
-
 #[cfg(test)]
 pub fn clean_db(conn: &Connection) {
     use diesel::sql_query;
     use diesel::RunQueryDsl;
 
-    sql_query("TRUNCATE TABLE onetime_token CASCADE").execute(conn).unwrap();
-    sql_query("TRUNCATE TABLE user_password CASCADE").execute(conn).unwrap();
-    sql_query("TRUNCATE TABLE app_user CASCADE").execute(conn).unwrap();
-
-
+    sql_query("TRUNCATE TABLE onetime_token CASCADE")
+        .execute(conn)
+        .unwrap();
+    sql_query("TRUNCATE TABLE user_password CASCADE")
+        .execute(conn)
+        .unwrap();
+    sql_query("TRUNCATE TABLE app_user CASCADE")
+        .execute(conn)
+        .unwrap();
 }
 
 #[cfg(test)]
-pub fn truncate_table(conn: &Connection, tables: Vec<String>) {
-
-}
+pub fn truncate_table(_conn: &Connection, _tables: Vec<String>) {}

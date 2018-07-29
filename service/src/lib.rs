@@ -1,19 +1,19 @@
-#![feature(extern_prelude)]
+#![feature(rust_2018_preview)]
+#![deny(rust_2018_compatibility)]
+#![deny(rust_2018_idioms)]
 
-extern crate chrono;
-extern crate diesel;
+
+/*
 #[macro_use]
 extern crate log;
 
 #[macro_use]
 extern crate failure;
 
-extern crate serde;
 #[macro_use]
 extern crate serde_derive;
 
-extern crate fina_model as model;
 #[macro_use]
-extern crate fina_util as util;
-
+extern crate fina_util;
+*/
 pub mod core;

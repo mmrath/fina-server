@@ -1,6 +1,7 @@
-use util::error::Error;
 use diesel::result::Error as DieselError;
-
+use failure::{Fail};
+use fina_util::error::Error;
+use serde_derive::Serialize;
 
 #[derive(Copy, Clone, Eq, PartialEq, Debug, Fail, Serialize)]
 pub enum DataErrorKind {
@@ -22,15 +23,16 @@ pub enum DataErrorKind {
 }
 error_kind!(DataError, DataErrorKind);
 
-
 impl From<DieselError> for DataError {
     fn from(err: DieselError) -> Self {
         use failure;
         match err {
-            DieselError::NotFound =>
-                Self { inner: failure::Error::from(err).context(DataErrorKind::NotFound) },
-            _ =>
-                Self { inner: failure::Error::from(err).context(DataErrorKind::Internal) }
+            DieselError::NotFound => Self {
+                inner: failure::Error::from(err).context(DataErrorKind::NotFound),
+            },
+            _ => Self {
+                inner: failure::Error::from(err).context(DataErrorKind::Internal),
+            },
         }
     }
 }

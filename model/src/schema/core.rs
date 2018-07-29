@@ -1,3 +1,5 @@
+use diesel::table;
+
 table! {
     country (id) {
         id -> Int4,
@@ -80,14 +82,12 @@ table! {
     }
 }
 
-
 table! {
     use diesel::sql_types::*;
-    use crate::schema::types::SqlTokenType;
     onetime_token (id) {
         id -> Int8,
         user_id -> Nullable<Int8>,
-        token_type -> SqlTokenType,
+        token_type -> Varchar,
         token -> Varchar,
         created_at -> Timestamptz,
         expiry_date -> Timestamptz,
@@ -106,8 +106,6 @@ allow_tables_to_appear_in_same_query!(
     user_password,
     onetime_token
 );
-
-
 
 table! {
     message (id) {
@@ -139,7 +137,4 @@ table! {
     }
 }
 
-
-
 joinable!(user_password -> app_user (user_id));
-

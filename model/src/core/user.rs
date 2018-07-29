@@ -1,14 +1,23 @@
 use chrono::DateTime;
 use chrono::Utc;
+use crate::error::{DataError, DataErrorKind};
+use crate::schema::core::app_user;
 use diesel::prelude::*;
 use diesel::{insert_into, update};
-use error::{DataError, DataErrorKind};
 use failure::ResultExt;
-use schema::core::app_user;
-use util::db::Connection;
+use fina_util::db::Connection;
 
 #[derive(
-    Queryable, Identifiable, AsChangeset, Associations, Debug, Serialize, Deserialize, Clone,Eq,PartialEq
+    Queryable,
+    Identifiable,
+    AsChangeset,
+    Associations,
+    Debug,
+    Serialize,
+    Deserialize,
+    Clone,
+    Eq,
+    PartialEq,
 )]
 #[table_name = "app_user"]
 pub struct User {
@@ -43,13 +52,11 @@ pub struct UserSignUp {
     pub password: String,
 }
 
-
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct UserLogin {
     pub username: String,
     pub password: String,
 }
-
 
 pub enum UserUniqueKey<'a> {
     Username(&'a str),
@@ -58,7 +65,7 @@ pub enum UserUniqueKey<'a> {
 }
 
 impl User {
-    pub fn insert(conn: &Connection, new_user: &NewUser) -> Result<User, DataError> {
+    pub fn insert(conn: &Connection, new_user: &NewUser<'_>) -> Result<User, DataError> {
         let res = insert_into(app_user::table)
             .values(new_user)
             .get_result(conn)?;
@@ -67,7 +74,7 @@ impl User {
     }
 
     pub fn activate(conn: &Connection, user: &User) -> Result<(), DataError> {
-        use schema::core::app_user::dsl::*;
+        use crate::schema::core::app_user::dsl::*;
 
         let uc = update(app_user)
             .filter(id.eq(user.id))
@@ -80,35 +87,27 @@ impl User {
         }
     }
     pub fn update(conn: &Connection, user: &User) -> Result<User, DataError> {
-        let res = update(app_user::table)
-            .set(user)
-            .get_result(conn)?;
+        let res = update(app_user::table).set(user).get_result(conn)?;
         Ok(res)
     }
 
     pub fn find(conn: &Connection, id: i64) -> Result<User, DataError> {
         debug!("Finding user by id {}", id);
-        let res = app_user::table
-            .find(id)
-            .first(conn)?;
+        let res = app_user::table.find(id).first(conn)?;
         Ok(res)
     }
 
     pub fn exists_by_username(conn: &Connection, uname: &str) -> Result<bool, DataError> {
+        use crate::schema::core::app_user::dsl::*;
         use diesel::expression::dsl::exists;
         use diesel::select;
-        use schema::core::app_user::dsl::*;
 
-        let res = select(exists(app_user.filter(username.eq(uname))))
-            .get_result(conn)?;
+        let res = select(exists(app_user.filter(username.eq(uname)))).get_result(conn)?;
         Ok(res)
     }
 
-    pub fn find_by_username(
-        conn: &Connection,
-        username: &str,
-    ) -> Result<Option<User>, DataError> {
-        use schema::core::app_user;
+    pub fn find_by_username(conn: &Connection, username: &str) -> Result<Option<User>, DataError> {
+        use crate::schema::core::app_user;
 
         let res = app_user::table
             .filter(app_user::username.eq(username))

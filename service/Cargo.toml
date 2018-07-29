@@ -1,4 +1,7 @@
+cargo-features = ["edition"]
+
 [package]
+edition = "2018"
 name = "fina-service"
 version = "0.1.0"
 authors = ["Murali Mohan Rath <murali@mmrath.com>"]

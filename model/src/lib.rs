@@ -1,20 +1,21 @@
 #![feature(rust_2018_preview)]
 #![deny(rust_2018_compatibility)]
-extern crate chrono;
+#![warn1qg(rust_2018_idioms)]
+
 
 #[macro_use]
 extern crate diesel;
 #[macro_use]
+extern crate diesel_derive_enum;
+#[macro_use]
 extern crate failure;
 #[macro_use]
 extern crate log;
-
 #[macro_use]
 extern crate serde_derive;
-extern crate serde;
-
 #[macro_use]
-extern crate fina_util as util;
+extern crate fina_util;
+
 
 pub mod core;
 pub mod error;

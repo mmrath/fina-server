@@ -1,13 +1,13 @@
 use reqwest::StatusCode;
 use std::collections::HashMap;
 
+use common;
+use model::core::User;
 use rocket;
 use rocket::http::{ContentType, Status};
 use rocket::local::Client;
-use util;
-use common;
 use serde_json;
-use model::core::User;
+use util;
 
 #[test]
 fn test_user_register() {
@@ -29,12 +29,14 @@ fn test_user_register() {
     let mut res = client
         .post("/api/user/signup")
         .header(ContentType::JSON)
-        .body(r#"{
+        .body(
+            r#"{
             "first_name": "John",
             "last_name": "Doe",
             "email": "john.doe@acme.org",
             "password": "h@rdToGu3$s"
-         }"#)
+         }"#,
+        )
         .dispatch();
 
     assert_eq!(res.status(), Status::Ok);
@@ -49,9 +51,7 @@ fn test_user_register() {
     assert_eq!(user.locked, false);
     assert_eq!(user.failed_logins, 0);
 
-
     let get_user_url = format!("/api/user/{}", user.id);
-
 
     // Check that the message exists with the correct contents.
     let mut res = client
@@ -65,19 +65,20 @@ fn test_user_register() {
     let mut res = client
         .post("/api/user/login")
         .header(ContentType::JSON)
-        .body(r#"{
+        .body(
+            r#"{
             "username": "john.doe@acme.org",
             "password": "h@rdToGu3$s"
-         }"#)
+         }"#,
+        )
         .dispatch();
 
-    let resp_body: HashMap<String, String> = serde_json::from_str(&res.body_string().unwrap()).unwrap();
+    let resp_body: HashMap<String, String> =
+        serde_json::from_str(&res.body_string().unwrap()).unwrap();
 
     assert_eq!(res.status(), Status::BadRequest);
     assert_eq!(resp_body.get("error").unwrap(), "LoginError");
     assert_eq!(resp_body.get("kind").unwrap(), "AccountNotYetActivated");
-
-
 }
 
 /*

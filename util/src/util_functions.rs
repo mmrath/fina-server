@@ -1,5 +1,6 @@
-use failure::{Error, ResultExt};
+use failure::{Error, Fail, ResultExt};
 use ring::digest;
+use serde_derive::{Deserialize, Serialize};
 
 pub fn rand_str(len: usize) -> String {
     use rand::distributions::Alphanumeric;

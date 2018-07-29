@@ -1,8 +1,8 @@
 #![feature(plugin, decl_macro)]
 #![plugin(rocket_codegen)]
 #![feature(rust_2018_preview)]
-#![warn(rust_2018_compatibility)]
-
+#![deny(rust_2018_compatibility)]
+#![warn(rust_2018_idioms)]
 
 
 extern crate rocket;
@@ -24,15 +24,11 @@ mod core;
 use rocket::Rocket;
 use rocket_contrib::JsonValue;
 
-
 pub fn rocket() -> (Rocket, Option<common::db::RequestContext>) {
     let pool = util::db::establish_connection_pool();
-    let conn =
-        Some(common::db::RequestContext(
-            util::Context::new(
-            pool.get().expect("database connection for testing")
-            )
-        ));
+    let conn = Some(common::db::RequestContext(util::Context::new(
+        pool.get().expect("database connection for testing"),
+    )));
 
     let rocket = rocket::ignite()
         .manage(pool)

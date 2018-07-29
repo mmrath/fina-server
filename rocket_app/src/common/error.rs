@@ -5,7 +5,6 @@ use rocket::request::Request;
 use rocket::response::{Responder, Response};
 use rocket_contrib::JsonValue;
 use serde::Serialize;
-use util;
 
 #[derive(Debug)]
 pub struct ApiError {
@@ -15,23 +14,20 @@ pub struct ApiError {
 
 impl ApiError {
 
-
+    #[allow(dead_code)]
     /// Set the data of the `Response` to `data`.
     pub fn data<T: Serialize>(mut self, data: T) -> ApiError {
         self.data = json!(&data);
         self
     }
 
+    #[allow(dead_code)]
     /// Convenience method to set `self.data` to `{"message": message}`.
     pub fn message(mut self, message: &str) -> ApiError {
-        self.data = json!({
-            "message": message
-        });
+        self.data = json!({ "message": message });
         self
     }
-
 }
-
 
 impl<'r> Responder<'r> for ApiError {
     fn respond_to(self, _req: &Request) -> Result<Response<'r>, Status> {
@@ -45,19 +41,23 @@ impl<'r> Responder<'r> for ApiError {
     }
 }
 
-impl<T: Serialize + util::error::Error + std::fmt::Debug> From<T> for ApiError {
+impl<T: Serialize + fina_util::error::Error + std::fmt::Debug> From<T> for ApiError {
     fn from(error: T) -> ApiError {
-
         let status = if error.is_internal_err() {
             error!("{:?}", error);
             Status::InternalServerError
+        } else {
+            Status::BadRequest
+        };
 
-        }else { Status::BadRequest };
-
-        Self { status, data: json!(&error)}
+        Self {
+            status,
+            data: json!(&error),
+        }
     }
 }
 
+#[allow(dead_code)]
 pub fn ok() -> ApiError {
     ApiError {
         data: json!(null),
@@ -65,6 +65,7 @@ pub fn ok() -> ApiError {
     }
 }
 
+#[allow(dead_code)]
 pub fn created() -> ApiError {
     ApiError {
         data: json!(null),
@@ -72,6 +73,7 @@ pub fn created() -> ApiError {
     }
 }
 
+#[allow(dead_code)]
 pub fn accepted() -> ApiError {
     ApiError {
         data: json!(null),
@@ -79,6 +81,7 @@ pub fn accepted() -> ApiError {
     }
 }
 
+#[allow(dead_code)]
 pub fn no_content() -> ApiError {
     ApiError {
         data: json!(null),
@@ -86,6 +89,7 @@ pub fn no_content() -> ApiError {
     }
 }
 
+#[allow(dead_code)]
 pub fn bad_request() -> ApiError {
     ApiError {
         data: json!(null),
@@ -93,6 +97,7 @@ pub fn bad_request() -> ApiError {
     }
 }
 
+#[allow(dead_code)]
 pub fn unauthorized() -> ApiError {
     ApiError {
         data: json!(null),
@@ -100,6 +105,7 @@ pub fn unauthorized() -> ApiError {
     }
 }
 
+#[allow(dead_code)]
 pub fn forbidden() -> ApiError {
     ApiError {
         data: json!(null),
@@ -107,6 +113,7 @@ pub fn forbidden() -> ApiError {
     }
 }
 
+#[allow(dead_code)]
 pub fn not_found() -> ApiError {
     ApiError {
         data: json!(null),
@@ -114,6 +121,7 @@ pub fn not_found() -> ApiError {
     }
 }
 
+#[allow(dead_code)]
 pub fn method_not_allowed() -> ApiError {
     ApiError {
         data: json!(null),
@@ -121,6 +129,7 @@ pub fn method_not_allowed() -> ApiError {
     }
 }
 
+#[allow(dead_code)]
 pub fn conflict() -> ApiError {
     ApiError {
         data: json!(null),
@@ -128,6 +137,7 @@ pub fn conflict() -> ApiError {
     }
 }
 
+#[allow(dead_code)]
 pub fn unprocessable_entity() -> ApiError {
     ApiError {
         data: json!(null),
@@ -135,6 +145,7 @@ pub fn unprocessable_entity() -> ApiError {
     }
 }
 
+#[allow(dead_code)]
 pub fn internal_server_error() -> ApiError {
     ApiError {
         data: json!(null),
@@ -142,6 +153,7 @@ pub fn internal_server_error() -> ApiError {
     }
 }
 
+#[allow(dead_code)]
 pub fn service_unavailable() -> ApiError {
     ApiError {
         data: json!(null),

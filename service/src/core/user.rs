@@ -1,26 +1,29 @@
 use chrono::Duration;
 use chrono::Utc;
 use failure::{Fail, ResultExt};
-use model::core::NewOnetimeToken;
-use model::core::{
+use fina_model::core::NewOnetimeToken;
+use fina_model::core::{
     NewUser, NewUserPassword, OnetimeToken, TokenType, User, UserPassword, UserSignUp,
 };
-use model::error::{DataError, DataErrorKind};
-use util::db::{Connection, tx};
-use util::{argon2_hash, argon2_verify, error::Error, new_uuid, sha512, Context};
+use fina_model::error::{DataError};
+use fina_util::db::{tx};
+use fina_util::{argon2_hash, argon2_verify, error::Error, new_uuid, sha512, Context};
+use fina_util::{error_kind,error_from_unhandled};
+use log::{log, debug, info};
+use serde_derive::{Serialize};
 
 pub(crate) const SECRET_KEY: &str = "71ade6e0-51b1-4aa3-aa70-682ea7566d3f";
 pub(crate) const PASSWORD_EXPIRY_DAYS: i64 = 365 * 25;
 pub(crate) const USER_ACTIVATION_TOKEN_EXPIRY: i64 = 24;
 
-pub fn create_user(context: &Context, new_user: &NewUser) -> Result<User, DataError> {
+pub fn create_user(context: &Context, new_user: &NewUser<'_>) -> Result<User, DataError> {
     let conn = context.db();
     tx(conn, |conn| User::insert(conn, new_user))
 }
 
-
 pub fn sign_up(context: &Context, user_ac: &UserSignUp) -> Result<User, SignUpError> {
     let conn = context.db();
+
     debug!("User to register {:?}", user_ac);
 
     let new_user = NewUser {
@@ -72,7 +75,7 @@ fn send_activation_email(user: &User, token: &str) {
     info!("User:{:?}, activation code: {:?}", user, token);
 }
 
-pub fn login(context: &Context, username: &str, password: &str) -> Result<User, LoginError> {
+pub fn login(context: &Context, username: &str, password: &str) -> Result<User, self::LoginError> {
     let conn = context.db();
 
     let mut user = User::find_by_username(conn, username)?
@@ -103,18 +106,9 @@ pub fn find_by_id(context: &Context, id: i64) -> Result<User, DataError> {
     User::find(conn, id)
 }
 
-error_kind!(
-    SignUpError,
-    SignUpErrorKind,
-    ::model::error::DataError,
-    ::failure::Error
-);
-error_kind!(
-    ActivationError,
-    ActivationErrorKind,
-    ::model::error::DataError
-);
-error_kind!(LoginError, LoginErrorKind, ::model::error::DataError);
+error_kind!(SignUpError, SignUpErrorKind, DataError, ::failure::Error);
+error_kind!(ActivationError, ActivationErrorKind, DataError);
+error_kind!(LoginError, LoginErrorKind, DataError);
 
 pub fn map_to<T, E>(error_kind: E) -> impl Fn(T) -> ::failure::Context<E>
 where

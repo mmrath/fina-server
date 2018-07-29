@@ -3,13 +3,12 @@ use r2d2::Pool;
 use r2d2_diesel::ConnectionManager;
 use std::env;
 
-use failure::{Fail, ResultExt};
 use crate::error::Error;
+use failure::{Fail, ResultExt};
 
 pub type Connection = PgConnection;
 pub type ConnectionPool = Pool<ConnectionManager<Connection>>;
 pub type PooledConnection = ::r2d2::PooledConnection<ConnectionManager<Connection>>;
-
 
 /// Creates the database connection pool
 pub fn establish_connection_pool() -> ConnectionPool {
@@ -52,5 +51,3 @@ pub fn tx<T: Sized, E: Fail + Error, F: FnOnce(&Connection) -> Result<T, E>>(
 
     return res;
 }
-
-
