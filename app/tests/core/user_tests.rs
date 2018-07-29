@@ -1,13 +1,12 @@
-use reqwest::StatusCode;
-use std::collections::HashMap;
-
 use crate::common;
 use fina_model::core::User;
+use fina_util;
+use reqwest::StatusCode;
 use rocket;
 use rocket::http::{ContentType, Status};
 use rocket::local::Client;
 use serde_json;
-use fina_util;
+use std::collections::HashMap;
 
 #[test]
 fn test_user_register() {

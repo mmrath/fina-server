@@ -1,94 +1,37 @@
-use actix::prelude::*;
-use actix_web::{App, AsyncResponder, FutureResponse, HttpResponse, Json, Path, State};
-use common::AppState;
-use common::ServiceActor;
-use failure::{Fail, ResultExt};
-use futures::Future;
-use http::StatusCode;
-use model::{
-    core::{User, UserSignUp},
-    error::{DataError, DataErrorKind},
-};
-use service::core::user::{find_by_id, sign_up, SignUpError, SignUpErrorKind};
-use util::{self, error::Error};
+use fina_model::core::{User, UserLogin, UserSignUp};
+use fina_service::core::user;
+use rocket::Route;
+use rocket_contrib::Json;
 
-pub(crate) fn config(app: App<AppState>) -> App<AppState> {
-    app.resource("/user/signup", |r| r.post().with(register_user))
-        .resource("/user/{id}", |r| r.get().with(find_user))
+use crate::common::db::RequestContext;
+use crate::common::ApiError;
+
+pub fn routes() -> Vec<Route> {
+    routes![self::get, self::sign_up, self::login, self::activate]
 }
 
-/// Async request handler
-pub(crate) fn find_user((id, state): (Path<i64>, State<AppState>)) -> FutureResponse<HttpResponse> {
-    // send async `CreateUser` message to a `DbExecutor`
-    info!("Finding user with id {}", id.clone());
-    state
-        .service_actor
-        .send(FindUserMsg(id.into_inner()))
-        .from_err()
-        .and_then(|res| match res {
-            Ok(user) => Ok(HttpResponse::Ok().json(user)),
-            Err(err) => {
-                let resp =
-                    HttpResponse::with_body(StatusCode::BAD_REQUEST, format!("{:?}", err.cause()));
-                Ok(resp)
-            }
-        })
-        .responder()
+#[get("/<id>", format = "json")]
+fn get(id: i64, context: RequestContext) -> Result<Json<User>, ApiError> {
+    user::find_by_id(&context, id)
+        .map(|u| Json(u))
+        .map_err(|err| err.into())
 }
 
-pub(crate) fn register_user(
-    (user_reg, state): (Json<UserSignUp>, State<AppState>),
-) -> FutureResponse<HttpResponse> {
-    // send async `CreateUser` message to a `DbExecutor`
-    state
-        .service_actor
-        .send(RegisterUserMsg(user_reg.into_inner()))
-        .from_err()
-        .and_then(|res| match res {
-            Ok(user) => Ok(HttpResponse::Ok().json(user)),
-            Err(err) => {
-                let resp = match err.kind() {
-                    SignUpErrorKind::UserEmailAlreadyExists => {
-                        HttpResponse::build(StatusCode::BAD_REQUEST).json(err)
-                    }
-                    _ => {
-                        error!("Internal error while signing up user {:?}", err);
-                        HttpResponse::build(StatusCode::INTERNAL_SERVER_ERROR).json(err)
-                    }
-                };
-                Ok(resp)
-            }
-        })
-        .responder()
+#[post("/signup", format = "json", data = "<signup>")]
+fn sign_up(signup: Json<UserSignUp>, context: RequestContext) -> Result<Json<User>, ApiError> {
+    user::sign_up(&context, &signup.0)
+        .map(|u| Json(u))
+        .map_err(|err| err.into())
 }
 
-pub struct RegisterUserMsg(pub UserSignUp);
-
-impl Message for RegisterUserMsg {
-    type Result = Result<User, SignUpError>;
+#[post("/login", format = "json", data = "<login>")]
+fn login(login: Json<UserLogin>, context: RequestContext) -> Result<Json<User>, ApiError> {
+    user::login(&context, &login.username, &login.password)
+        .map(|u| Json(u))
+        .map_err(|err| err.into())
 }
 
-impl Handler<RegisterUserMsg> for ServiceActor {
-    type Result = Result<User, SignUpError>;
-
-    fn handle(&mut self, msg: RegisterUserMsg, _: &mut Self::Context) -> Self::Result {
-        let conn = self.pool.get().context(SignUpErrorKind::Internal)?;
-        info!("Register message is {:?}", msg.0);
-        sign_up(&util::Context::new(conn), &msg.0)
-    }
-}
-
-pub struct FindUserMsg(pub i64);
-
-impl Message for FindUserMsg {
-    type Result = Result<User, DataError>;
-}
-
-impl Handler<FindUserMsg> for ServiceActor {
-    type Result = Result<User, DataError>;
-
-    fn handle(&mut self, msg: FindUserMsg, _: &mut Self::Context) -> Self::Result {
-        let conn = self.pool.get().context(DataErrorKind::Internal)?;
-        find_by_id(&util::Context::new(conn), msg.0)
-    }
+#[get("/activate/<token>")]
+fn activate(token: String, context: RequestContext) -> Result<(), ApiError> {
+    user::activate(&context, &token).map_err(|err| err.into())
 }

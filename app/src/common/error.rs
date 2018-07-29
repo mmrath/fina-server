@@ -13,7 +13,6 @@ pub struct ApiError {
 }
 
 impl ApiError {
-
     #[allow(dead_code)]
     /// Set the data of the `Response` to `data`.
     pub fn data<T: Serialize>(mut self, data: T) -> ApiError {
