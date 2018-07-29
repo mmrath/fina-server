@@ -5,12 +5,12 @@ use fina_model::core::NewOnetimeToken;
 use fina_model::core::{
     NewUser, NewUserPassword, OnetimeToken, TokenType, User, UserPassword, UserSignUp,
 };
-use fina_model::error::{DataError};
-use fina_util::db::{tx};
+use fina_model::error::DataError;
+use fina_util::db::tx;
 use fina_util::{argon2_hash, argon2_verify, error::Error, new_uuid, sha512, Context};
-use fina_util::{error_kind,error_from_unhandled};
-use log::{log, debug, info};
-use serde_derive::{Serialize};
+use fina_util::{error_from_unhandled, error_kind};
+use log::{debug, info, log};
+use serde_derive::Serialize;
 
 pub(crate) const SECRET_KEY: &str = "71ade6e0-51b1-4aa3-aa70-682ea7566d3f";
 pub(crate) const PASSWORD_EXPIRY_DAYS: i64 = 365 * 25;

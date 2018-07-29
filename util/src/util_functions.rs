@@ -1,4 +1,5 @@
-use failure::{Error, Fail, ResultExt};
+use failure::{Error,ResultExt, Fail};
+
 use ring::digest;
 use serde_derive::{Deserialize, Serialize};
 

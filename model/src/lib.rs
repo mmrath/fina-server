@@ -2,7 +2,6 @@
 #![deny(rust_2018_compatibility)]
 #![warn(rust_2018_idioms)]
 
-
 #[macro_use]
 extern crate diesel;
 #[macro_use]
@@ -15,7 +14,6 @@ extern crate log;
 extern crate serde_derive;
 #[macro_use]
 extern crate fina_util;
-
 
 pub mod core;
 pub mod error;

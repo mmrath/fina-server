@@ -15,8 +15,8 @@ use diesel::types::ToSql;
 use fina_util::db::Connection;
 use std::io::Write;
 
-use failure::ResultExt;
 use diesel::sql_types::Varchar;
+use failure::ResultExt;
 
 #[derive(Queryable, Identifiable, Associations, Debug, Serialize, Deserialize, Clone)]
 #[table_name = "onetime_token"]
@@ -46,7 +46,6 @@ pub enum TokenType {
     PasswordReset,
 }
 
-
 impl ToSql<Varchar, Pg> for TokenType {
     fn to_sql<W: Write>(&self, out: &mut Output<'_, W, Pg>) -> serialize::Result {
         match *self {
@@ -66,7 +65,6 @@ impl FromSql<Varchar, Pg> for TokenType {
         }
     }
 }
-
 
 impl OnetimeToken {
     pub fn find_by_token(

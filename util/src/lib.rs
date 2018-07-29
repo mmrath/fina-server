@@ -1,7 +1,6 @@
 #![feature(rust_2018_preview)]
 #![deny(rust_2018_compatibility)]
 #![deny(rust_2018_idioms)]
-
 #![macro_use]
 pub mod macros;
 
@@ -13,7 +12,6 @@ pub mod error;
 
 pub use self::context::Context;
 pub use self::util_functions::*;
-
 
 #[macro_export]
 macro_rules! error_from_unhandled {
@@ -115,4 +113,3 @@ macro_rules! error_kind {
 
     }
 }
-

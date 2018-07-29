@@ -1,11 +1,8 @@
-use diesel::prelude::*;
-
 use crate::error::{DataError, DataErrorKind};
 use crate::schema::core::*;
+use diesel::prelude::*;
 use failure::ResultExt;
 use fina_util::db::Connection;
-
-
 
 #[derive(Queryable, Identifiable, AsChangeset, Debug, Serialize, Deserialize, Clone)]
 #[table_name = "date_format"]

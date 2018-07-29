@@ -1,5 +1,5 @@
 use diesel::result::Error as DieselError;
-use failure::{Fail};
+use failure::Fail;
 use fina_util::error::Error;
 use serde_derive::Serialize;
 
