@@ -1,5 +1,5 @@
 use parking_lot::Mutex;
-use util::db::Connection;
+use fina_util::db::Connection;
 
 static DB_LOCK: Mutex<()> = Mutex::new(());
 

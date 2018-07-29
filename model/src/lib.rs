@@ -1,6 +1,6 @@
 #![feature(rust_2018_preview)]
 #![deny(rust_2018_compatibility)]
-#![warn1qg(rust_2018_idioms)]
+#![warn(rust_2018_idioms)]
 
 
 #[macro_use]
