@@ -1,0 +1,16 @@
+cargo-features = ["edition"]
+
+[package]
+edition = "2018"
+name = "fina-codegen"
+version = "0.1.0"
+authors = ["Murali Mohan Rath <murali@mmrath.com>"]
+
+[lib]
+name = "fina_codegen"
+proc-macro = true
+
+[dependencies]
+syn = "0.14"
+quote = "0.6"
+proc-macro2 = "0.4"

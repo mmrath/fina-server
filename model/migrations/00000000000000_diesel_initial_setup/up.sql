@@ -631,12 +631,12 @@ SELECT automanage_updated_at('user_password');
 
 CREATE TABLE onetime_token (
   id          BIGSERIAL,
-  user_id     BIGINT                   NOT NULL,
+  user_id     BIGINT,
   created_at  TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
   expiry_date TIMESTAMP WITH TIME ZONE NOT NULL,
   token_type  TEXT                     NOT NULL,
   token       TEXT                     NOT NULL,
-  CONSTRAINT pk_onetime_token PRIMARY KEY (user_id),
+  CONSTRAINT pk_onetime_token PRIMARY KEY (id),
   CONSTRAINT fk_onetime_token__app_user FOREIGN KEY (user_id) REFERENCES app_user (id),
   CONSTRAINT uk_onetime_token__token UNIQUE (token)
 );

@@ -19,9 +19,7 @@ macro_rules! error_from_unhandled {
         impl From<$from> for $error {
             fn from(err: $from) -> $error {
                 use failure::Fail;
-                $error {
-                    inner: err.context($error_kind::Internal),
-                }
+                $error::map_to($error_kind::Internal)(err)
             }
         }
     };

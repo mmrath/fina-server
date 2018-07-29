@@ -6,6 +6,9 @@ name = "fina-util"
 version = "0.1.0"
 authors = ["Murali Mohan Rath <murali@mmrath.com>"]
 
+[lib]
+name = "fina_util"
+
 [dependencies]
 log = "0.4"
 diesel = {version ="^1.3",features=["postgres","chrono"]}

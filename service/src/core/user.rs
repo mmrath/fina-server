@@ -8,9 +8,11 @@ use fina_model::core::{
 use fina_model::error::DataError;
 use fina_util::db::tx;
 use fina_util::{argon2_hash, argon2_verify, error::Error, new_uuid, sha512, Context};
-use fina_util::{error_from_unhandled, error_kind};
+use fina_util::{error_from_unhandled};
 use log::{debug, info, log};
 use serde_derive::Serialize;
+use fina_codegen::CustomError;
+
 
 pub(crate) const SECRET_KEY: &str = "71ade6e0-51b1-4aa3-aa70-682ea7566d3f";
 pub(crate) const PASSWORD_EXPIRY_DAYS: i64 = 365 * 25;
@@ -72,6 +74,9 @@ pub fn activate(context: &Context, token: &str) -> Result<(), ActivationError> {
 }
 
 fn send_activation_email(user: &User, token: &str) {
+
+
+
     info!("User:{:?}, activation code: {:?}", user, token);
 }
 
@@ -106,9 +111,9 @@ pub fn find_by_id(context: &Context, id: i64) -> Result<User, DataError> {
     User::find(conn, id)
 }
 
-error_kind!(SignUpError, SignUpErrorKind, DataError, ::failure::Error);
-error_kind!(ActivationError, ActivationErrorKind, DataError);
-error_kind!(LoginError, LoginErrorKind, DataError);
+//error_kind!(SignUpError, SignUpErrorKind, DataError, ::failure::Error);
+//error_kind!(ActivationError, ActivationErrorKind, DataError);
+//error_kind!(LoginError, LoginErrorKind, DataError);
 
 pub fn map_to<T, E>(error_kind: E) -> impl Fn(T) -> ::failure::Context<E>
 where
@@ -118,7 +123,7 @@ where
     move |err| err.into().context(error_kind)
 }
 
-#[derive(Copy, Clone, Eq, PartialEq, Debug, Fail, Serialize)]
+#[derive(Copy, Clone, Eq, PartialEq, Debug, Fail, Serialize,CustomError)]
 pub enum SignUpErrorKind {
     #[fail(display = "User already exists with same email")]
     UserEmailAlreadyExists,
@@ -126,8 +131,11 @@ pub enum SignUpErrorKind {
     #[fail(display = "Internal error")]
     Internal,
 }
+error_from_unhandled!(SignUpError,SignUpErrorKind,DataError);
+error_from_unhandled!(SignUpError,SignUpErrorKind,failure::Error);
 
-#[derive(Copy, Clone, Eq, PartialEq, Debug, Fail, Serialize)]
+
+#[derive(Copy, Clone, Eq, PartialEq, Debug, Fail, Serialize, CustomError)]
 pub enum ActivationErrorKind {
     #[fail(display = "Invalid activation token")]
     InvalidToken,
@@ -139,7 +147,9 @@ pub enum ActivationErrorKind {
     Internal,
 }
 
-#[derive(Copy, Clone, Eq, PartialEq, Debug, Fail, Serialize)]
+error_from_unhandled!(ActivationError,ActivationErrorKind,DataError);
+
+#[derive(Copy, Clone, Eq, PartialEq, Debug, Fail, Serialize,CustomError)]
 pub enum LoginErrorKind {
     #[fail(display = "Invalid activation token")]
     InvalidUsernameOrPassword,
@@ -153,3 +163,4 @@ pub enum LoginErrorKind {
     #[fail(display = "Internal error")]
     Internal,
 }
+error_from_unhandled!(LoginError,LoginErrorKind,DataError);
