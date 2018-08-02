@@ -11,6 +11,7 @@ name = "fina_codegen"
 proc-macro = true
 
 [dependencies]
-syn = "0.14"
 quote = "0.6"
+syn = "0.14"
+synstructure = "0.9"
 proc-macro2 = "0.4"

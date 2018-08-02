@@ -16,12 +16,12 @@ pub use self::util_functions::*;
 #[macro_export]
 macro_rules! error_from_unhandled {
     ($error:ident, $error_kind:ident, $from:path) => {
-        impl From<$from> for $error {
-            fn from(err: $from) -> $error {
-                use failure::Fail;
-                $error::map_to($error_kind::Internal)(err)
+            impl From<$from> for $error {
+                fn from(err: $from) -> $error {
+                    use failure::Fail;
+                    $error::map_to($error_kind::Internal)(err)
+                }
             }
-        }
     };
 }
 

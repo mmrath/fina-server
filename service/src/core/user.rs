@@ -111,9 +111,6 @@ pub fn find_by_id(context: &Context, id: i64) -> Result<User, DataError> {
     User::find(conn, id)
 }
 
-//error_kind!(SignUpError, SignUpErrorKind, DataError, ::failure::Error);
-//error_kind!(ActivationError, ActivationErrorKind, DataError);
-//error_kind!(LoginError, LoginErrorKind, DataError);
 
 pub fn map_to<T, E>(error_kind: E) -> impl Fn(T) -> ::failure::Context<E>
 where
@@ -123,16 +120,17 @@ where
     move |err| err.into().context(error_kind)
 }
 
-#[derive(Copy, Clone, Eq, PartialEq, Debug, Fail, Serialize,CustomError)]
+#[derive(Copy, Clone, Eq, PartialEq, Debug, Fail, Serialize, CustomError)]
 pub enum SignUpErrorKind {
     #[fail(display = "User already exists with same email")]
     UserEmailAlreadyExists,
 
     #[fail(display = "Internal error")]
+    #[custom_error(map_from(DataError,Error))]
     Internal,
 }
-error_from_unhandled!(SignUpError,SignUpErrorKind,DataError);
-error_from_unhandled!(SignUpError,SignUpErrorKind,failure::Error);
+//error_from_unhandled!(SignUpError,SignUpErrorKind,DataError);
+//error_from_unhandled!(SignUpError,SignUpErrorKind,failure::Error);
 
 
 #[derive(Copy, Clone, Eq, PartialEq, Debug, Fail, Serialize, CustomError)]
@@ -144,10 +142,11 @@ pub enum ActivationErrorKind {
     AccountLocked,
 
     #[fail(display = "Internal error")]
+    #[custom_error(map_from(DataError))]
     Internal,
 }
 
-error_from_unhandled!(ActivationError,ActivationErrorKind,DataError);
+//error_from_unhandled!(ActivationError,ActivationErrorKind,DataError);
 
 #[derive(Copy, Clone, Eq, PartialEq, Debug, Fail, Serialize,CustomError)]
 pub enum LoginErrorKind {
@@ -161,6 +160,6 @@ pub enum LoginErrorKind {
     AccountNotYetActivated,
 
     #[fail(display = "Internal error")]
+    #[custom_error(map_from(DataError))]
     Internal,
 }
-error_from_unhandled!(LoginError,LoginErrorKind,DataError);
